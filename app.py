@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------------------------
-# Custom CSS for the app (clean background, flag, etc.)
+# Custom CSS
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -85,9 +85,7 @@ def check_password():
 
 def logout():
     """Log out by resetting the password flag and clearing game state."""
-    # Reset the password flag
     st.session_state["password_correct"] = False
-    # Clear any game-related session keys (optional, they will be reinitialized on login)
     keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
                      "last_user_move", "last_ai_move", "last_user_explanation",
                      "last_ai_explanation", "user_turn"]
@@ -183,7 +181,6 @@ if 'board' not in st.session_state:
 # Sidebar with branding, game controls, move dashboard, and logout
 # ----------------------------------------------------------------------
 with st.sidebar:
-    # Haitian flag and company header
     col_flag, col_name = st.columns([1, 3])
     with col_flag:
         st.image("https://flagcdn.com/w320/ht.png", width=60)
@@ -193,7 +190,6 @@ with st.sidebar:
     
     st.divider()
     
-    # Game controls
     st.markdown("## ♟️ Game Controls")
     difficulty = st.selectbox(
         "AI Difficulty",
@@ -222,7 +218,6 @@ with st.sidebar:
 
     st.divider()
     
-    # Move dashboard
     st.markdown("## 📊 Move Dashboard")
     st.subheader("Your last move")
     if st.session_state.last_user_move:
@@ -239,7 +234,6 @@ with st.sidebar:
 
     st.divider()
     
-    # Game status
     st.subheader("Game Status")
     if st.session_state.game_over:
         if st.session_state.winner == "user":
@@ -253,7 +247,6 @@ with st.sidebar:
     
     st.divider()
     
-    # Pricing & license
     st.markdown("## 💰 Pricing")
     st.markdown("""
     <div class="price-tag">One‑time purchase: $20 USD</div>
@@ -335,26 +328,36 @@ if st.session_state.user_turn:
         submitted = st.form_submit_button("Make Move")
     if submitted:
         try:
-            move = chess.Move.from_uci(from_sq + to_sq)
-            if move in board.legal_moves:
-                # Apply user move
-                explanation = explain_move(board, move, player="You")
-                board.push(move)
-                st.session_state.last_user_move = move
-                st.session_state.last_user_explanation = explanation
-                st.session_state.move_history.append(("user", move, explanation))
-                # Check for win/draw
-                if board.is_checkmate():
-                    st.session_state.game_over = True
-                    st.session_state.winner = "user"
-                elif board.is_stalemate() or board.is_insufficient_material():
-                    st.session_state.game_over = True
-                    st.session_state.winner = None
-                else:
-                    st.session_state.user_turn = False
-                st.rerun()
+            # Validate that the move is in UCI format (two square names)
+            if len(from_sq) != 2 or len(to_sq) != 2:
+                st.error("Invalid square name. Please use standard names like 'e2', 'e4'.")
             else:
-                st.error("Invalid move! Try again.")
+                move = chess.Move.from_uci(from_sq + to_sq)
+                # Additional check: is it your piece? (user is white)
+                piece = board.piece_at(move.from_square)
+                if piece is None:
+                    st.error("No piece at the from square.")
+                elif piece.color != chess.WHITE:
+                    st.error("That's not your piece. You are playing white.")
+                elif move not in board.legal_moves:
+                    st.error("Illegal move. Try a different move.")
+                else:
+                    # Apply user move
+                    explanation = explain_move(board, move, player="You")
+                    board.push(move)
+                    st.session_state.last_user_move = move
+                    st.session_state.last_user_explanation = explanation
+                    st.session_state.move_history.append(("user", move, explanation))
+                    # Check for win/draw
+                    if board.is_checkmate():
+                        st.session_state.game_over = True
+                        st.session_state.winner = "user"
+                    elif board.is_stalemate() or board.is_insufficient_material():
+                        st.session_state.game_over = True
+                        st.session_state.winner = None
+                    else:
+                        st.session_state.user_turn = False
+                    st.rerun()
         except Exception:
             st.error("Invalid move format. Use standard square names like 'e2' and 'e4'.")
 else:
