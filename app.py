@@ -14,8 +14,75 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------------------------
-# Helper functions
+# Custom CSS for the app (clean background, flag, etc.)
 # ----------------------------------------------------------------------
+st.markdown("""
+<style>
+    .main .block-container {
+        padding-top: 0rem;
+        padding-bottom: 0rem;
+    }
+    .stApp {
+        background: #f5f5f5;
+    }
+    .flag-img {
+        width: 80px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .game-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #d62c1e;
+        text-align: center;
+        margin: 0;
+    }
+    .price-tag {
+        background: #d62c1e;
+        display: inline-block;
+        padding: 6px 18px;
+        border-radius: 40px;
+        font-weight: bold;
+        color: white;
+        margin-top: 8px;
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding: 20px;
+        font-size: 0.8rem;
+        color: #666;
+        border-top: 1px solid #ddd;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e0e0e0;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ----------------------------------------------------------------------
+# Helper functions (authentication, game logic)
+# ----------------------------------------------------------------------
+def check_password():
+    """Returns True if password is correct."""
+    def password_entered():
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
+        st.error("❌ Wrong password. Try again.")
+        return False
+    else:
+        return True
+
 def piece_name(piece):
     """Return human-readable piece name."""
     if piece is None:
@@ -100,10 +167,21 @@ if 'board' not in st.session_state:
     st.session_state.user_turn = True
 
 # ----------------------------------------------------------------------
-# Sidebar
+# Sidebar with branding, game controls, move dashboard
 # ----------------------------------------------------------------------
 with st.sidebar:
-    st.header("♟️ Game Controls")
+    # Haitian flag and company header
+    col_flag, col_name = st.columns([1, 3])
+    with col_flag:
+        st.image("https://flagcdn.com/w320/ht.png", width=60)
+    with col_name:
+        st.markdown("### **GlobalInternet.py**")
+        st.markdown("*Owner: Gesner Deslandes*")
+    
+    st.divider()
+    
+    # Game controls
+    st.markdown("## ♟️ Game Controls")
     difficulty = st.selectbox(
         "AI Difficulty",
         ["easy", "medium", "hard"],
@@ -125,7 +203,9 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    st.header("📊 Move Dashboard")
+    
+    # Move dashboard
+    st.markdown("## 📊 Move Dashboard")
     st.subheader("Your last move")
     if st.session_state.last_user_move:
         st.write(f"Move: {chess.square_name(st.session_state.last_user_move.from_square)} → {chess.square_name(st.session_state.last_user_move.to_square)}")
@@ -140,6 +220,8 @@ with st.sidebar:
         st.write("AI hasn't moved yet.")
 
     st.divider()
+    
+    # Game status
     st.subheader("Game Status")
     if st.session_state.game_over:
         if st.session_state.winner == "user":
@@ -150,12 +232,72 @@ with st.sidebar:
             st.info("Stalemate.")
     else:
         st.info("Game in progress. It's your turn." if st.session_state.user_turn else "AI is thinking...")
+    
+    st.divider()
+    
+    # Pricing & license
+    st.markdown("## 💰 Pricing")
+    st.markdown("""
+    <div class="price-tag">One‑time purchase: $20 USD</div>
+    <div style="margin-top: 10px;">Includes lifetime access and free updates.</div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("## 📞 Contact & Payment")
+    st.markdown("""
+    **📧 Email:** deslndes78@gmail.com  
+    **📱 Moncash:** (509) 4738-5663 via Prisme Transfer  
+    *Send payment and we'll activate your access.*
+    """)
+    
+    st.divider()
+    
+    st.markdown("## 📜 License")
+    st.markdown("""
+    **All Rights Reserved** – Copyright © 2026 GlobalInternet.py  
+    This software is for personal use only. Redistribution or resale without permission is prohibited.
+    """)
+    
+    st.divider()
+    
+    st.markdown("""
+    <div style="text-align: center; margin-top: 20px;">
+        <p>🇭🇹 Made in Haiti 🇭🇹</p>
+        <p><small>by <strong>GlobalInternet.py</strong><br>Python Developer: Gesner Deslandes</small></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------
-# Main area: Display board and move input
+# Main area: header with flag, title, and chessboard
 # ----------------------------------------------------------------------
-st.title("♟️ Play Chess Against the Machine")
-st.markdown("Select a piece and then a destination square from the dropdowns below. The dashboard on the left explains each move. Learn by winning!")
+col1, col2, col3 = st.columns([1, 2, 1])
+with col1:
+    st.image("https://flagcdn.com/w320/ht.png", width=100)
+with col2:
+    st.markdown("<h1 style='text-align: center; font-size: 3rem;'>♟️ Play Chess Against the Machine ♟️</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'><em>Learn by understanding every move</em></p>", unsafe_allow_html=True)
+with col3:
+    st.markdown("""
+    <div style='text-align: right;'>
+        <b>GlobalInternet.py</b><br>
+        Gesner Deslandes<br>
+        Python Developer
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# ----------------------------------------------------------------------
+# Login check – if not logged in, show password input and description
+# ----------------------------------------------------------------------
+if not check_password():
+    st.info("👋 Welcome to the chess teaching app! Enter the password to start.")
+    st.stop()
+
+# ----------------------------------------------------------------------
+# Once logged in, display the game interface
+# ----------------------------------------------------------------------
+st.markdown("## ♟️ Make your move")
+st.markdown("Select a piece and then a destination square from the dropdowns below. The dashboard on the left explains each move.")
 
 # Display chessboard as SVG
 board = st.session_state.board
@@ -168,7 +310,6 @@ if st.session_state.game_over:
 
 # Input for user move (only if user's turn)
 if st.session_state.user_turn:
-    # List all square names
     squares = [chess.square_name(i) for i in range(64)]
     with st.form("move_form"):
         from_sq = st.selectbox("From square", squares, index=0)
@@ -223,5 +364,8 @@ else:
             st.session_state.winner = None
     st.rerun()
 
+# ----------------------------------------------------------------------
+# Footer
+# ----------------------------------------------------------------------
 st.divider()
-st.markdown("Made with ♟️ by GlobalInternet.py – Made in Haiti 🇭🇹")
+st.markdown("<div class='footer'>Made with ♟️ by GlobalInternet.py – Made in Haiti 🇭🇹</div>", unsafe_allow_html=True)
