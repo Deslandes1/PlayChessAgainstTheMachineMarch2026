@@ -65,6 +65,47 @@ st.markdown("""
     .fullscreen-btn:hover {
         background-color: #ff7b2c;
     }
+    /* Celebration balloons */
+    .balloon {
+        position: fixed;
+        bottom: -100px;
+        animation: floatUp 5s ease-in forwards;
+        pointer-events: none;
+        z-index: 1000;
+        font-size: 40px;
+    }
+    @keyframes floatUp {
+        0% {
+            bottom: -100px;
+            opacity: 1;
+        }
+        100% {
+            bottom: 120%;
+            opacity: 0;
+        }
+    }
+    .celebration-text {
+        position: fixed;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8);
+        color: gold;
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+        z-index: 1001;
+        font-size: 24px;
+        font-weight: bold;
+        white-space: nowrap;
+        animation: fadeOut 5s forwards;
+        pointer-events: none;
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { opacity: 0; display: none; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,8 +124,10 @@ def init_session_state():
         "last_user_explanation": None,
         "last_ai_explanation": None,
         "user_turn": True,
-        "lang": "en",               # default language
-        "password_correct": False,  # initially False, will be set after login
+        "lang": "en",
+        "password_correct": False,
+        "demo_mode": False,
+        "celebration_triggered": False,
     }
     for key, default_value in defaults.items():
         if key not in st.session_state:
@@ -136,24 +179,15 @@ translations = {
         "make_move": "Make Move",
         "fullscreen": "⛶ FULLSCREEN",
         "score": "Score (White advantage)",
-        "move_explanation": "{player} moved the {piece} from {from_sq} to {to_sq}.",
-        "capture": " That captured the opponent's {captured}!",
-        "central": " This moves the piece to a central square, giving you more control.",
-        "knight_central": " Knights are often better on central squares.",
-        "pawn_advance": " Advancing the pawn to the 4th rank is a good developing move.",
-        "check": " This move puts the opponent in check!",
-        "invalid_move_no_piece": "No piece at the from square.",
-        "invalid_move_wrong_piece": "That's not your piece. You are playing white.",
-        "invalid_move_illegal": "Illegal move. Try a different move.",
-        "invalid_move_format": "Invalid move format. Use standard square names like 'e2' and 'e4'.",
-        "piece_names": {
-            "pawn": "pawn",
-            "knight": "knight",
-            "bishop": "bishop",
-            "rook": "rook",
-            "queen": "queen",
-            "king": "king"
-        }
+        "demo_mode": "Demo Mode (show winning strategies)",
+        "demo_easy": "Easy – Fork",
+        "demo_medium": "Medium – Pin",
+        "demo_hard": "Hard – Discovered Check",
+        "demo_move": "Move {}: {} → {}",
+        "demo_explanation": "This is a winning tactic.",
+        "congratulations": "Congratulations! You won!",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py"
     },
     "fr": {
         "app_title": "♟️ Jouez aux échecs contre la machine ♟️",
@@ -195,24 +229,15 @@ translations = {
         "make_move": "Jouer",
         "fullscreen": "⛶ PLEIN ÉCRAN",
         "score": "Score (Avantage blanc)",
-        "move_explanation": "{player} a déplacé {piece} de {from_sq} vers {to_sq}.",
-        "capture": " Cela a capturé le {captured} adverse !",
-        "central": " Ce coup place la pièce au centre, vous donnant plus de contrôle.",
-        "knight_central": " Les cavaliers sont souvent plus efficaces sur les cases centrales.",
-        "pawn_advance": " Avancer le pion à la 4e rangée est un bon coup de développement.",
-        "check": " Ce coup met l'adversaire en échec !",
-        "invalid_move_no_piece": "Aucune pièce sur la case de départ.",
-        "invalid_move_wrong_piece": "Ce n'est pas votre pièce. Vous jouez les blancs.",
-        "invalid_move_illegal": "Coup illégal. Essayez un autre coup.",
-        "invalid_move_format": "Format de coup invalide. Utilisez des noms standard comme 'e2', 'e4'.",
-        "piece_names": {
-            "pawn": "pion",
-            "knight": "cavalier",
-            "bishop": "fou",
-            "rook": "tour",
-            "queen": "dame",
-            "king": "roi"
-        }
+        "demo_mode": "Mode démo (afficher les stratégies gagnantes)",
+        "demo_easy": "Facile – Fourchette",
+        "demo_medium": "Moyen – Clouage",
+        "demo_hard": "Difficile – Échec à la découverte",
+        "demo_move": "Coup {} : {} → {}",
+        "demo_explanation": "C'est une tactique gagnante.",
+        "congratulations": "Félicitations ! Vous avez gagné !",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py"
     },
     "es": {
         "app_title": "♟️ Juega al ajedrez contra la máquina ♟️",
@@ -254,24 +279,15 @@ translations = {
         "make_move": "Mover",
         "fullscreen": "⛶ PANTALLA COMPLETA",
         "score": "Puntuación (Ventaja blancas)",
-        "move_explanation": "{player} movió {piece} de {from_sq} a {to_sq}.",
-        "capture": " ¡Eso capturó el {captured} contrario!",
-        "central": " Esto mueve la pieza a una casilla central, dándote más control.",
-        "knight_central": " Los caballos suelen ser mejores en casillas centrales.",
-        "pawn_advance": " Avanzar el peón a la 4ª fila es un buen movimiento de desarrollo.",
-        "check": " ¡Este movimiento pone al oponente en jaque!",
-        "invalid_move_no_piece": "No hay pieza en la casilla de origen.",
-        "invalid_move_wrong_piece": "Esa no es tu pieza. Tú juegas con las blancas.",
-        "invalid_move_illegal": "Movimiento ilegal. Intenta otro.",
-        "invalid_move_format": "Formato de movimiento inválido. Usa nombres estándar como 'e2', 'e4'.",
-        "piece_names": {
-            "pawn": "peón",
-            "knight": "caballo",
-            "bishop": "alfil",
-            "rook": "torre",
-            "queen": "reina",
-            "king": "rey"
-        }
+        "demo_mode": "Modo demo (mostrar estrategias ganadoras)",
+        "demo_easy": "Fácil – Horquilla",
+        "demo_medium": "Medio – Clavada",
+        "demo_hard": "Difícil – Jaque descubierto",
+        "demo_move": "Movimiento {}: {} → {}",
+        "demo_explanation": "Esta es una táctica ganadora.",
+        "congratulations": "¡Felicitaciones! ¡Ganaste!",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py"
     },
     "ht": {
         "app_title": "♟️ Jwe Echèk Kont Machin nan ♟️",
@@ -313,24 +329,15 @@ translations = {
         "make_move": "Jwe",
         "fullscreen": "⛶ EKRAN KONPLÈ",
         "score": "Nòt (Avantaj blan)",
-        "move_explanation": "{player} deplase {piece} soti {from_sq} ale {to_sq}.",
-        "capture": " Sa pran {captured} advèsè a!",
-        "central": " Sa deplase pyès la nan yon kare santral, ba w plis kontwòl.",
-        "knight_central": " Chwal yo souvan pi bon nan kare santral yo.",
-        "pawn_advance": " Avanse pyon an nan 4yèm ranje se yon bon mouvman devlopman.",
-        "check": " Mouvman sa a mete advèsè a nan echèk!",
-        "invalid_move_no_piece": "Pa gen pyès nan kare depa a.",
-        "invalid_move_wrong_piece": "Se pa pyès ou. Ou ap jwe blan.",
-        "invalid_move_illegal": "Mouvman ilegal. Eseye yon lòt mouvman.",
-        "invalid_move_format": "Fòma mouvman pa bon. Itilize non estanda tankou 'e2', 'e4'.",
-        "piece_names": {
-            "pawn": "pyon",
-            "knight": "chwal",
-            "bishop": "fou",
-            "rook": "to",
-            "queen": "dàm",
-            "king": "wa"
-        }
+        "demo_mode": "Mòd demo (montre estrateji pou genyen)",
+        "demo_easy": "Fasil – Fouchèt",
+        "demo_medium": "Mwayen – Klou",
+        "demo_hard": "Difisil – Echèk dekouvri",
+        "demo_move": "Mouvman {}: {} → {}",
+        "demo_explanation": "Sa a se yon taktik pou genyen.",
+        "congratulations": "Felisitasyon! Ou genyen!",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py"
     }
 }
 
@@ -361,7 +368,7 @@ def logout():
     st.session_state["password_correct"] = False
     keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
                      "last_user_move", "last_ai_move", "last_user_explanation",
-                     "last_ai_explanation", "user_turn"]
+                     "last_ai_explanation", "user_turn", "celebration_triggered"]
     for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
@@ -455,7 +462,7 @@ def generate_report(board, move_history, score, lang):
     report_lines.append(f"♟️ {t['app_title']} ♟️")
     report_lines.append(f"{t['app_subtitle']}\n")
     report_lines.append(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    report_lines.append(f"Language: {lang_options[lang]}")
+    report_lines.append(f"Language: {lang}")
     report_lines.append(f"Difficulty: {t[st.session_state.difficulty]}")
     report_lines.append(f"Current score ({t['score']}): {score}\n")
     report_lines.append(f"FEN: {board.fen()}\n")
@@ -471,7 +478,33 @@ def generate_report(board, move_history, score, lang):
     return "\n".join(report_lines)
 
 # ----------------------------------------------------------------------
-# Language selector (must be after session state init)
+# Demo mode strategies (move sequences)
+# ----------------------------------------------------------------------
+def get_demo_moves(difficulty, lang):
+    """Return a list of (from_sq, to_sq, explanation) for the given difficulty."""
+    t = translations[lang]
+    # Simple winning tactics (just illustrative)
+    if difficulty == "easy":   # Fork
+        return [
+            ("e2", "e4", t["demo_move"].format(1, "e2", "e4") + " " + t["demo_explanation"]),
+            ("d1", "h5", t["demo_move"].format(2, "d1", "h5") + " " + t["demo_explanation"]),
+            ("f1", "c4", t["demo_move"].format(3, "f1", "c4") + " " + t["demo_explanation"]),
+        ]
+    elif difficulty == "medium":  # Pin
+        return [
+            ("e2", "e4", t["demo_move"].format(1, "e2", "e4") + " " + t["demo_explanation"]),
+            ("d1", "f3", t["demo_move"].format(2, "d1", "f3") + " " + t["demo_explanation"]),
+            ("f1", "c4", t["demo_move"].format(3, "f1", "c4") + " " + t["demo_explanation"]),
+        ]
+    else:  # hard – discovered check
+        return [
+            ("e2", "e4", t["demo_move"].format(1, "e2", "e4") + " " + t["demo_explanation"]),
+            ("g1", "f3", t["demo_move"].format(2, "g1", "f3") + " " + t["demo_explanation"]),
+            ("f1", "c4", t["demo_move"].format(3, "f1", "c4") + " " + t["demo_explanation"]),
+        ]
+
+# ----------------------------------------------------------------------
+# Language selector
 # ----------------------------------------------------------------------
 lang_options = {
     "en": "🇺🇸 English",
@@ -486,7 +519,6 @@ selected_lang = st.sidebar.selectbox(
     index=list(lang_options.keys()).index(st.session_state.lang)
 )
 if selected_lang != st.session_state.lang:
-    # Language changed – clear stored last moves to avoid old language explanations
     st.session_state.lang = selected_lang
     st.session_state.last_user_move = None
     st.session_state.last_ai_move = None
@@ -498,7 +530,7 @@ lang = st.session_state.lang
 t = translations[lang]
 
 # ----------------------------------------------------------------------
-# Sidebar with branding, game controls, move dashboard, and logout
+# Sidebar
 # ----------------------------------------------------------------------
 with st.sidebar:
     col_flag, col_name = st.columns([1, 3])
@@ -532,11 +564,18 @@ with st.sidebar:
             st.session_state.last_user_explanation = None
             st.session_state.last_ai_explanation = None
             st.session_state.user_turn = True
+            st.session_state.celebration_triggered = False
             st.rerun()
     with col2:
         if st.button(t['logout'], use_container_width=True):
             logout()
 
+    # Demo mode toggle
+    demo_mode = st.checkbox(t['demo_mode'], value=st.session_state.demo_mode)
+    if demo_mode != st.session_state.demo_mode:
+        st.session_state.demo_mode = demo_mode
+        st.rerun()
+    
     # Download report button
     report_text = generate_report(st.session_state.board, st.session_state.move_history, compute_score(st.session_state.board), lang)
     st.download_button(
@@ -547,7 +586,7 @@ with st.sidebar:
         use_container_width=True
     )
 
-    # Fullscreen button (targets parent document to work in iframe)
+    # Fullscreen button
     st.markdown("""
     <button class="fullscreen-btn" onclick="(window.parent.document.documentElement || document.documentElement).requestFullscreen();">⛶ FULLSCREEN</button>
     """, unsafe_allow_html=True)
@@ -617,7 +656,22 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------
-# Main area: header with flag, title, and chessboard
+# Demo mode display (if enabled)
+# ----------------------------------------------------------------------
+if st.session_state.demo_mode:
+    st.markdown("---")
+    st.markdown("### 🧠 Winning Strategies (Demo)")
+    cols = st.columns(3)
+    for i, diff in enumerate(["easy", "medium", "hard"]):
+        with cols[i]:
+            with st.expander(t[f"demo_{diff}"]):
+                moves = get_demo_moves(diff, lang)
+                for move in moves:
+                    st.write(move[2])
+    st.markdown("---")
+
+# ----------------------------------------------------------------------
+# Main area
 # ----------------------------------------------------------------------
 col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
@@ -636,9 +690,6 @@ with col3:
 
 st.divider()
 
-# ----------------------------------------------------------------------
-# Login check – if not logged in, show password input and description
-# ----------------------------------------------------------------------
 if not check_password():
     st.info("👋 Welcome to the chess teaching app! Enter the password to start.")
     st.stop()
@@ -655,6 +706,38 @@ board_svg = chess.svg.board(board=board, size=400)
 st.image(board_svg, width=400)
 
 if st.session_state.game_over:
+    # Victory celebration (only if user won and not yet triggered)
+    if st.session_state.winner == "user" and not st.session_state.celebration_triggered:
+        st.session_state.celebration_triggered = True
+        # Inject HTML for balloons and text (will be rendered once)
+        balloon_html = f"""
+        <div id="celebration-container" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999;">
+            <div class="celebration-text">
+                {t['company_name']}<br>
+                {t['owner_name']}<br>
+                {t['congratulations']}
+            </div>
+        </div>
+        <script>
+            // Create 50 balloons
+            const container = document.getElementById('celebration-container');
+            for(let i = 0; i < 50; i++) {{
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                const leftPos = Math.random() * window.innerWidth;
+                const delay = Math.random() * 3;
+                balloon.style.left = leftPos + 'px';
+                balloon.style.animationDelay = delay + 's';
+                balloon.innerHTML = '🎈';
+                container.appendChild(balloon);
+            }}
+            // Remove celebration after 5 seconds
+            setTimeout(() => {{
+                if(container) container.remove();
+            }}, 5000);
+        </script>
+        """
+        st.components.v1.html(balloon_html, height=0)
     st.stop()
 
 # User move
