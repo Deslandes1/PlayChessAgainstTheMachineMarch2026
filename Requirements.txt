@@ -1,0 +1,3 @@
+streamlit>=1.29.0
+python-chess>=1.10.0
+streamlit-chessboard>=0.1.0
