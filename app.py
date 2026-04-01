@@ -83,6 +83,19 @@ def check_password():
     else:
         return True
 
+def logout():
+    """Log out by resetting the password flag and clearing game state."""
+    # Reset the password flag
+    st.session_state["password_correct"] = False
+    # Clear any game-related session keys (optional, they will be reinitialized on login)
+    keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
+                     "last_user_move", "last_ai_move", "last_user_explanation",
+                     "last_ai_explanation", "user_turn"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
 def piece_name(piece):
     """Return human-readable piece name."""
     if piece is None:
@@ -167,7 +180,7 @@ if 'board' not in st.session_state:
     st.session_state.user_turn = True
 
 # ----------------------------------------------------------------------
-# Sidebar with branding, game controls, move dashboard
+# Sidebar with branding, game controls, move dashboard, and logout
 # ----------------------------------------------------------------------
 with st.sidebar:
     # Haitian flag and company header
@@ -190,17 +203,22 @@ with st.sidebar:
     if difficulty != st.session_state.difficulty:
         st.session_state.difficulty = difficulty
 
-    if st.button("🔄 New Game"):
-        st.session_state.board = chess.Board()
-        st.session_state.move_history = []
-        st.session_state.game_over = False
-        st.session_state.winner = None
-        st.session_state.last_user_move = None
-        st.session_state.last_ai_move = None
-        st.session_state.last_user_explanation = None
-        st.session_state.last_ai_explanation = None
-        st.session_state.user_turn = True
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Restart", use_container_width=True):
+            st.session_state.board = chess.Board()
+            st.session_state.move_history = []
+            st.session_state.game_over = False
+            st.session_state.winner = None
+            st.session_state.last_user_move = None
+            st.session_state.last_ai_move = None
+            st.session_state.last_user_explanation = None
+            st.session_state.last_ai_explanation = None
+            st.session_state.user_turn = True
+            st.rerun()
+    with col2:
+        if st.button("🚪 Logout", use_container_width=True):
+            logout()
 
     st.divider()
     
