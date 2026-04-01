@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------------------------
-# Custom CSS for the app (clean background, flag, etc.)
+# Custom CSS
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -29,13 +29,6 @@ st.markdown("""
         width: 80px;
         border-radius: 4px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .game-title {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #d62c1e;
-        text-align: center;
-        margin: 0;
     }
     .price-tag {
         background: #d62c1e;
@@ -73,6 +66,30 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ----------------------------------------------------------------------
+# Initialize session state (all keys at once)
+# ----------------------------------------------------------------------
+def init_session_state():
+    defaults = {
+        "board": chess.Board(),
+        "move_history": [],
+        "game_over": False,
+        "winner": None,
+        "difficulty": "easy",
+        "last_user_move": None,
+        "last_ai_move": None,
+        "last_user_explanation": None,
+        "last_ai_explanation": None,
+        "user_turn": True,
+        "lang": "en",               # default language
+        "password_correct": False,  # initially False, will be set after login
+    }
+    for key, default_value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
+
+init_session_state()
 
 # ----------------------------------------------------------------------
 # Translations
@@ -316,6 +333,7 @@ translations = {
 # Helper functions
 # ----------------------------------------------------------------------
 def check_password():
+    """Returns True if password is correct."""
     def password_entered():
         if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
@@ -323,7 +341,7 @@ def check_password():
         else:
             st.session_state["password_correct"] = False
 
-    if "password_correct" not in st.session_state:
+    if not st.session_state.get("password_correct", False):
         st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
@@ -334,10 +352,11 @@ def check_password():
         return True
 
 def logout():
+    """Log out by resetting the password flag and clearing game state."""
     st.session_state["password_correct"] = False
     keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
                      "last_user_move", "last_ai_move", "last_user_explanation",
-                     "last_ai_explanation", "user_turn", "lang"]
+                     "last_ai_explanation", "user_turn"]
     for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
@@ -345,12 +364,9 @@ def logout():
 
 def piece_name(piece, lang):
     """Return translated piece name."""
-    piece_type = piece_name_english(piece)
-    return translations[lang]["piece_names"].get(piece_type, piece_type)
-
-def piece_name_english(piece):
     if piece is None:
         return "piece"
+    piece_type = piece.piece_type
     names = {
         chess.PAWN: "pawn",
         chess.KNIGHT: "knight",
@@ -359,13 +375,14 @@ def piece_name_english(piece):
         chess.QUEEN: "queen",
         chess.KING: "king"
     }
-    return names[piece.piece_type]
+    eng_name = names[piece_type]
+    return translations[lang]["piece_names"].get(eng_name, eng_name)
 
 def explain_move(board, move, player, lang):
     t = translations[lang]
     piece = board.piece_at(move.from_square)
     captured = board.piece_at(move.to_square)
-    piece_str = piece_name(piece, lang) if piece else t["piece_names"]["pawn"]  # fallback
+    piece_str = piece_name(piece, lang) if piece else t["piece_names"]["pawn"]
     from_sq = chess.square_name(move.from_square)
     to_sq = chess.square_name(move.to_square)
     explanation = t["move_explanation"].format(player=player, piece=piece_str, from_sq=from_sq, to_sq=to_sq)
@@ -419,7 +436,6 @@ def ai_move(board, difficulty="easy"):
 
 def compute_score(board):
     """Returns material advantage for white."""
-    # Simple piece values
     values = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9, chess.KING: 0}
     score = 0
     for piece_type, value in values.items():
@@ -428,23 +444,7 @@ def compute_score(board):
     return score
 
 # ----------------------------------------------------------------------
-# Session state initialization
-# ----------------------------------------------------------------------
-if 'board' not in st.session_state:
-    st.session_state.board = chess.Board()
-    st.session_state.move_history = []
-    st.session_state.game_over = False
-    st.session_state.winner = None
-    st.session_state.difficulty = "easy"
-    st.session_state.last_user_move = None
-    st.session_state.last_ai_move = None
-    st.session_state.last_user_explanation = None
-    st.session_state.last_ai_explanation = None
-    st.session_state.user_turn = True
-    st.session_state.lang = "en"  # default language
-
-# ----------------------------------------------------------------------
-# Language selector
+# Language selector (must be after session state init)
 # ----------------------------------------------------------------------
 lang_options = {
     "en": "🇺🇸 English",
@@ -452,7 +452,12 @@ lang_options = {
     "es": "🇪🇸 Español",
     "ht": "🇭🇹 Kreyòl"
 }
-selected_lang = st.sidebar.selectbox("🌐 Language", options=list(lang_options.keys()), format_func=lambda x: lang_options[x], index=list(lang_options.keys()).index(st.session_state.lang))
+selected_lang = st.sidebar.selectbox(
+    "🌐 Language",
+    options=list(lang_options.keys()),
+    format_func=lambda x: lang_options[x],
+    index=list(lang_options.keys()).index(st.session_state.lang)
+)
 if selected_lang != st.session_state.lang:
     st.session_state.lang = selected_lang
     st.rerun()
@@ -500,7 +505,7 @@ with st.sidebar:
         if st.button(t['logout'], use_container_width=True):
             logout()
 
-    # Fullscreen button (custom HTML)
+    # Fullscreen button
     st.markdown("""
     <button class="fullscreen-btn" onclick="document.documentElement.requestFullscreen();">⛶ FULLSCREEN</button>
     """, unsafe_allow_html=True)
@@ -590,10 +595,10 @@ with col3:
 st.divider()
 
 # ----------------------------------------------------------------------
-# Login check
+# Login check – if not logged in, show password input and description
 # ----------------------------------------------------------------------
 if not check_password():
-    st.info(f"👋 {t['game_in_progress']}" if lang == "en" else "👋 Bienvenue dans l'appli d'échecs ! Entrez le mot de passe pour commencer.")
+    st.info("👋 Welcome to the chess teaching app! Enter the password to start.")
     st.stop()
 
 # ----------------------------------------------------------------------
