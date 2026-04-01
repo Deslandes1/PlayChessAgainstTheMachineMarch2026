@@ -459,7 +459,12 @@ selected_lang = st.sidebar.selectbox(
     index=list(lang_options.keys()).index(st.session_state.lang)
 )
 if selected_lang != st.session_state.lang:
+    # Language changed – clear stored last moves to avoid old language explanations
     st.session_state.lang = selected_lang
+    st.session_state.last_user_move = None
+    st.session_state.last_ai_move = None
+    st.session_state.last_user_explanation = None
+    st.session_state.last_ai_explanation = None
     st.rerun()
 
 lang = st.session_state.lang
@@ -607,7 +612,7 @@ if not check_password():
 st.markdown(f"## {t['move_heading']}")
 st.markdown(t['move_instruction'])
 
-# Display chessboard as SVG (fixed width to avoid deprecation warning)
+# Display chessboard as SVG
 board = st.session_state.board
 board_svg = chess.svg.board(board=board, size=400)
 st.image(board_svg, width=400)
