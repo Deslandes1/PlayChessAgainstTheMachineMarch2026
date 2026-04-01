@@ -505,9 +505,9 @@ with st.sidebar:
         if st.button(t['logout'], use_container_width=True):
             logout()
 
-    # Fullscreen button
+    # Fullscreen button (targets parent document to work in iframe)
     st.markdown("""
-    <button class="fullscreen-btn" onclick="document.documentElement.requestFullscreen();">⛶ FULLSCREEN</button>
+    <button class="fullscreen-btn" onclick="(window.parent.document.documentElement || document.documentElement).requestFullscreen();">⛶ FULLSCREEN</button>
     """, unsafe_allow_html=True)
 
     st.divider()
@@ -607,10 +607,10 @@ if not check_password():
 st.markdown(f"## {t['move_heading']}")
 st.markdown(t['move_instruction'])
 
-# Display chessboard as SVG
+# Display chessboard as SVG (fixed width to avoid deprecation warning)
 board = st.session_state.board
 board_svg = chess.svg.board(board=board, size=400)
-st.image(board_svg, use_column_width=True)
+st.image(board_svg, width=400)
 
 if st.session_state.game_over:
     st.stop()
