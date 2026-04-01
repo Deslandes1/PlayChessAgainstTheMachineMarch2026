@@ -5,7 +5,7 @@ An interactive chess game where you play against an AI with move‑by‑move exp
 ## 🎮 Features
 
 - **Play against the AI** – choose difficulty: Easy (random moves), Medium (prefers captures), Hard (simple evaluation).
-- **Interactive board** – click pieces to move.
+- **Interactive board** – use dropdowns to select from and to squares.
 - **Move explanations** – every move you and the AI make is explained (captures, development, central control, checks).
 - **Dashboard** – see your last move, AI's last move, and game status.
 - **New game** – restart anytime.
