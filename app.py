@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------------------------
-# Custom CSS (includes mobile layout adjustments)
+# Custom CSS
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -48,6 +48,10 @@ st.markdown("""
         color: #666;
         border-top: 1px solid #ddd;
     }
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e0e0e0;
+    }
     .fullscreen-btn {
         background-color: #2c2e3a;
         color: white;
@@ -61,7 +65,6 @@ st.markdown("""
     .fullscreen-btn:hover {
         background-color: #ff7b2c;
     }
-    /* Celebration balloons */
     .balloon {
         position: fixed;
         bottom: -100px;
@@ -71,14 +74,8 @@ st.markdown("""
         font-size: 40px;
     }
     @keyframes floatUp {
-        0% {
-            bottom: -100px;
-            opacity: 1;
-        }
-        100% {
-            bottom: 120%;
-            opacity: 0;
-        }
+        0% { bottom: -100px; opacity: 1; }
+        100% { bottom: 120%; opacity: 0; }
     }
     .celebration-text {
         position: fixed;
@@ -102,7 +99,6 @@ st.markdown("""
         80% { opacity: 1; }
         100% { opacity: 0; display: none; }
     }
-    /* Responsive layout: on small screens, stack columns */
     @media (max-width: 768px) {
         .row-widget.stSelectbox, .stTextArea, .stButton {
             width: 100%;
@@ -115,7 +111,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------
-# Initialize session state
+# Initialize session state (all keys at once)
 # ----------------------------------------------------------------------
 def init_session_state():
     defaults = {
@@ -141,9 +137,7 @@ def init_session_state():
 init_session_state()
 
 # ----------------------------------------------------------------------
-# Translations (same as before – only included essential for brevity)
-# We'll reuse the previous translations dictionary but for brevity I'll skip full duplication.
-# In the actual code, keep the full translations as before.
+# Translations – full dictionary
 # ----------------------------------------------------------------------
 translations = {
     "en": {
@@ -210,19 +204,241 @@ translations = {
         "invalid_move_illegal": "Illegal move. Try a different move.",
         "invalid_move_format": "Invalid move format. Use standard square names like 'e2' and 'e4'."
     },
-    # For brevity, other languages would be here. In production, keep all four as in earlier versions.
+    "fr": {
+        "app_title": "♟️ Jouez aux échecs contre la machine ♟️",
+        "app_subtitle": "Apprenez en comprenant chaque coup",
+        "sidebar_company": "GlobalInternet.py",
+        "sidebar_owner": "Propriétaire : Gesner Deslandes",
+        "game_controls": "♟️ Commandes du jeu",
+        "ai_difficulty": "Difficulté IA",
+        "easy": "facile",
+        "medium": "moyen",
+        "hard": "difficile",
+        "restart": "🔄 Redémarrer",
+        "logout": "🚪 Déconnexion",
+        "download_report": "📥 Télécharger le rapport",
+        "move_dashboard": "📊 Tableau de bord",
+        "your_last_move": "Votre dernier coup",
+        "ai_last_move": "Dernier coup de l'IA",
+        "no_move": "Pas encore de coup.",
+        "game_status": "État de la partie",
+        "game_in_progress": "Partie en cours. C'est à vous de jouer.",
+        "ai_thinking": "L'IA réfléchit...",
+        "you_won": "🎉 Vous avez gagné ! Bravo !",
+        "ai_won": "L'IA a gagné. Réessayez !",
+        "stalemate": "Pat.",
+        "pricing_title": "💰 Tarif",
+        "price_tag": "Achat unique : 20 USD",
+        "price_desc": "Accès à vie et mises à jour gratuites incluses.",
+        "contact_title": "📞 Contact & Paiement",
+        "contact_email": "deslndes78@gmail.com",
+        "contact_phone": "(509) 4738-5663 via Prisme Transfer",
+        "license_title": "📜 Licence",
+        "license_text": "**Tous droits réservés** – Copyright © 2026 GlobalInternet.py\nCe logiciel est pour usage personnel uniquement. Redistribution ou revente interdite sans autorisation.",
+        "made_in_haiti": "🇭🇹 Fabriqué en Haïti 🇭🇹",
+        "made_by": "par <strong>GlobalInternet.py</strong><br>Développeur Python : Gesner Deslandes",
+        "move_heading": "♟️ Faites votre coup",
+        "move_instruction": "Sélectionnez une pièce puis une case de destination dans les listes déroulantes ci-dessous. Le tableau de bord à gauche explique chaque coup.",
+        "from_square": "Case de départ",
+        "to_square": "Case d'arrivée",
+        "make_move": "Jouer",
+        "fullscreen": "⛶ PLEIN ÉCRAN",
+        "score": "Score (Avantage blanc)",
+        "demo_mode": "Mode démo (afficher les stratégies gagnantes)",
+        "demo_easy": "Facile – Fourchette",
+        "demo_medium": "Moyen – Clouage",
+        "demo_hard": "Difficile – Échec à la découverte",
+        "demo_move": "Coup {} : {} → {}",
+        "demo_explanation": "C'est une tactique gagnante.",
+        "congratulations": "Félicitations ! Vous avez gagné !",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py",
+        "piece_names": {
+            "pawn": "pion", "knight": "cavalier", "bishop": "fou",
+            "rook": "tour", "queen": "dame", "king": "roi"
+        },
+        "move_explanation": "{player} a déplacé {piece} de {from_sq} vers {to_sq}.",
+        "capture": " Cela a capturé le {captured} adverse !",
+        "central": " Ce coup place la pièce au centre, vous donnant plus de contrôle.",
+        "knight_central": " Les cavaliers sont souvent plus efficaces sur les cases centrales.",
+        "pawn_advance": " Avancer le pion à la 4e rangée est un bon coup de développement.",
+        "check": " Ce coup met l'adversaire en échec !",
+        "invalid_move_no_piece": "Aucune pièce sur la case de départ.",
+        "invalid_move_wrong_piece": "Ce n'est pas votre pièce. Vous jouez les blancs.",
+        "invalid_move_illegal": "Coup illégal. Essayez un autre coup.",
+        "invalid_move_format": "Format de coup invalide. Utilisez des noms standard comme 'e2', 'e4'."
+    },
+    "es": {
+        "app_title": "♟️ Juega al ajedrez contra la máquina ♟️",
+        "app_subtitle": "Aprende comprendiendo cada movimiento",
+        "sidebar_company": "GlobalInternet.py",
+        "sidebar_owner": "Propietario: Gesner Deslandes",
+        "game_controls": "♟️ Controles del juego",
+        "ai_difficulty": "Dificultad IA",
+        "easy": "fácil",
+        "medium": "medio",
+        "hard": "difícil",
+        "restart": "🔄 Reiniciar",
+        "logout": "🚪 Cerrar sesión",
+        "download_report": "📥 Descargar informe",
+        "move_dashboard": "📊 Panel de movimientos",
+        "your_last_move": "Tu último movimiento",
+        "ai_last_move": "Último movimiento de la IA",
+        "no_move": "Aún no hay movimientos.",
+        "game_status": "Estado de la partida",
+        "game_in_progress": "Partida en curso. Es tu turno.",
+        "ai_thinking": "La IA está pensando...",
+        "you_won": "🎉 ¡Has ganado! ¡Bien hecho!",
+        "ai_won": "La IA ha ganado. ¡Inténtalo de nuevo!",
+        "stalemate": "Ahogado.",
+        "pricing_title": "💰 Precio",
+        "price_tag": "Compra única: 20 USD",
+        "price_desc": "Acceso de por vida y actualizaciones gratuitas incluidas.",
+        "contact_title": "📞 Contacto y pago",
+        "contact_email": "deslndes78@gmail.com",
+        "contact_phone": "(509) 4738-5663 vía Prisme Transfer",
+        "license_title": "📜 Licencia",
+        "license_text": "**Todos los derechos reservados** – Copyright © 2026 GlobalInternet.py\nEste software es solo para uso personal. Se prohíbe la redistribución o reventa sin permiso.",
+        "made_in_haiti": "🇭🇹 Hecho en Haití 🇭🇹",
+        "made_by": "por <strong>GlobalInternet.py</strong><br>Desarrollador Python: Gesner Deslandes",
+        "move_heading": "♟️ Haz tu movimiento",
+        "move_instruction": "Selecciona una pieza y luego una casilla de destino en los menús desplegables. El panel de la izquierda explica cada movimiento.",
+        "from_square": "Casilla de origen",
+        "to_square": "Casilla de destino",
+        "make_move": "Mover",
+        "fullscreen": "⛶ PANTALLA COMPLETA",
+        "score": "Puntuación (Ventaja blancas)",
+        "demo_mode": "Modo demo (mostrar estrategias ganadoras)",
+        "demo_easy": "Fácil – Horquilla",
+        "demo_medium": "Medio – Clavada",
+        "demo_hard": "Difícil – Jaque descubierto",
+        "demo_move": "Movimiento {}: {} → {}",
+        "demo_explanation": "Esta es una táctica ganadora.",
+        "congratulations": "¡Felicitaciones! ¡Ganaste!",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py",
+        "piece_names": {
+            "pawn": "peón", "knight": "caballo", "bishop": "alfil",
+            "rook": "torre", "queen": "reina", "king": "rey"
+        },
+        "move_explanation": "{player} movió {piece} de {from_sq} a {to_sq}.",
+        "capture": " ¡Eso capturó el {captured} contrario!",
+        "central": " Esto mueve la pieza a una casilla central, dándote más control.",
+        "knight_central": " Los caballos suelen ser mejores en casillas centrales.",
+        "pawn_advance": " Avanzar el peón a la 4ª fila es un buen movimiento de desarrollo.",
+        "check": " ¡Este movimiento pone al oponente en jaque!",
+        "invalid_move_no_piece": "No hay pieza en la casilla de origen.",
+        "invalid_move_wrong_piece": "Esa no es tu pieza. Tú juegas con las blancas.",
+        "invalid_move_illegal": "Movimiento ilegal. Intenta otro.",
+        "invalid_move_format": "Formato de movimiento inválido. Usa nombres estándar como 'e2', 'e4'."
+    },
+    "ht": {
+        "app_title": "♟️ Jwe Echèk Kont Machin nan ♟️",
+        "app_subtitle": "Aprann lè w konprann chak mouvman",
+        "sidebar_company": "GlobalInternet.py",
+        "sidebar_owner": "Pwopriyetè: Gesner Deslandes",
+        "game_controls": "♟️ Kontwòl jwèt",
+        "ai_difficulty": "Difikilte AI",
+        "easy": "fasil",
+        "medium": "mwayen",
+        "hard": "difisil",
+        "restart": "🔄 Kòmanse ankò",
+        "logout": "🚪 Dekonekte",
+        "download_report": "📥 Telechaje rapò",
+        "move_dashboard": "📊 Tablodbò mouvman",
+        "your_last_move": "Dènye mouvman ou",
+        "ai_last_move": "Dènye mouvman AI",
+        "no_move": "Pa gen mouvman ankò.",
+        "game_status": "Eta jwèt la",
+        "game_in_progress": "Jwèt la ap mache. Se tou pa ou.",
+        "ai_thinking": "AI ap reflechi...",
+        "you_won": "🎉 Ou genyen! Félicitasyon!",
+        "ai_won": "AI genyen. Eseye ankò!",
+        "stalemate": "Pat.",
+        "pricing_title": "💰 Pri",
+        "price_tag": "Acha inik: $20 USD",
+        "price_desc": "Gen aksè tout lavi ak mizajou gratis.",
+        "contact_title": "📞 Kontak ak Peman",
+        "contact_email": "deslndes78@gmail.com",
+        "contact_phone": "(509) 4738-5663 via Prisme Transfer",
+        "license_title": "📜 Lisans",
+        "license_text": "**Tout dwa rezève** – Copyright © 2026 GlobalInternet.py\nLojisyèl sa a se pou itilizasyon pèsonèl sèlman. Redistribisyon oswa revant san pèmisyon entèdi.",
+        "made_in_haiti": "🇭🇹 Fèt an Ayiti 🇭🇹",
+        "made_by": "pa <strong>GlobalInternet.py</strong><br>Developè Python: Gesner Deslandes",
+        "move_heading": "♟️ Fè mouvman ou",
+        "move_instruction": "Chwazi yon pyès epi yon kare destinasyon nan lis ki anba a. Tablodbò a sou bò gòch eksplike chak mouvman.",
+        "from_square": "Kare depa",
+        "to_square": "Kare destinasyon",
+        "make_move": "Jwe",
+        "fullscreen": "⛶ EKRAN KONPLÈ",
+        "score": "Nòt (Avantaj blan)",
+        "demo_mode": "Mòd demo (montre estrateji pou genyen)",
+        "demo_easy": "Fasil – Fouchèt",
+        "demo_medium": "Mwayen – Klou",
+        "demo_hard": "Difisil – Echèk dekouvri",
+        "demo_move": "Mouvman {}: {} → {}",
+        "demo_explanation": "Sa a se yon taktik pou genyen.",
+        "congratulations": "Felisitasyon! Ou genyen!",
+        "owner_name": "Gesner Deslandes",
+        "company_name": "GlobalInternet.py",
+        "piece_names": {
+            "pawn": "pyon", "knight": "chwal", "bishop": "fou",
+            "rook": "to", "queen": "dàm", "king": "wa"
+        },
+        "move_explanation": "{player} deplase {piece} soti {from_sq} ale {to_sq}.",
+        "capture": " Sa pran {captured} advèsè a!",
+        "central": " Sa deplase pyès la nan yon kare santral, ba w plis kontwòl.",
+        "knight_central": " Chwal yo souvan pi bon nan kare santral yo.",
+        "pawn_advance": " Avanse pyon an nan 4yèm ranje se yon bon mouvman devlopman.",
+        "check": " Mouvman sa a mete advèsè a nan echèk!",
+        "invalid_move_no_piece": "Pa gen pyès nan kare depa a.",
+        "invalid_move_wrong_piece": "Se pa pyès ou. Ou ap jwe blan.",
+        "invalid_move_illegal": "Mouvman ilegal. Eseye yon lòt mouvman.",
+        "invalid_move_format": "Fòma mouvman pa bon. Itilize non estanda tankou 'e2', 'e4'."
+    }
 }
 
 # ----------------------------------------------------------------------
-# Helper functions (unchanged, but we need piece_name, explain_move, etc.)
+# Helper functions (unchanged)
 # ----------------------------------------------------------------------
+def check_password():
+    """Returns True if password is correct."""
+    def password_entered():
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if not st.session_state.get("password_correct", False):
+        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
+        st.error("❌ Wrong password. Try again.")
+        return False
+    else:
+        return True
+
+def logout():
+    """Log out by resetting the password flag and clearing game state."""
+    st.session_state["password_correct"] = False
+    keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
+                     "last_user_move", "last_ai_move", "last_user_explanation",
+                     "last_ai_explanation", "user_turn", "celebration_triggered"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
 def piece_name(piece, lang):
     t = translations[lang]
     if piece is None:
         return "piece"
     names = {chess.PAWN: "pawn", chess.KNIGHT: "knight", chess.BISHOP: "bishop",
              chess.ROOK: "rook", chess.QUEEN: "queen", chess.KING: "king"}
-    return t["piece_names"].get(names[piece.piece_type], names[piece.piece_type])
+    eng_name = names[piece.piece_type]
+    return t["piece_names"].get(eng_name, eng_name)
 
 def explain_move(board, move, player, lang):
     t = translations[lang]
@@ -330,33 +546,6 @@ def get_demo_moves(difficulty, lang):
             ("f1", "c4", t["demo_move"].format(3, "f1", "c4") + " " + t["demo_explanation"]),
         ]
 
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == st.secrets["password"]:
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]
-        else:
-            st.session_state["password_correct"] = False
-    if not st.session_state.get("password_correct", False):
-        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
-        return False
-    elif not st.session_state["password_correct"]:
-        st.text_input("🔐 Enter password to unlock", type="password", on_change=password_entered, key="password")
-        st.error("❌ Wrong password. Try again.")
-        return False
-    else:
-        return True
-
-def logout():
-    st.session_state["password_correct"] = False
-    keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
-                     "last_user_move", "last_ai_move", "last_user_explanation",
-                     "last_ai_explanation", "user_turn", "celebration_triggered"]
-    for key in keys_to_clear:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.rerun()
-
 # ----------------------------------------------------------------------
 # Language selector
 # ----------------------------------------------------------------------
@@ -384,8 +573,7 @@ lang = st.session_state.lang
 t = translations[lang]
 
 # ----------------------------------------------------------------------
-# Sidebar (collapsible on mobile using st.sidebar, but we keep it as is)
-# Streamlit's sidebar automatically collapses on narrow screens.
+# Sidebar with branding, game controls, move dashboard, and logout
 # ----------------------------------------------------------------------
 with st.sidebar:
     col_flag, col_name = st.columns([1, 3])
@@ -475,7 +663,8 @@ with st.sidebar:
     score = compute_score(st.session_state.board)
     st.divider()
     st.markdown(f"## {t['score']}")
-    st.metric(label="", value=score, delta=score if score != 0 else None)
+    # Fix empty label: add a hidden label with label_visibility="collapsed"
+    st.metric(label="Score", value=score, delta=score if score != 0 else None, label_visibility="collapsed")
     
     st.divider()
     
@@ -522,7 +711,7 @@ if st.session_state.demo_mode:
     st.markdown("---")
 
 # ----------------------------------------------------------------------
-# Main area (responsive board)
+# Main area: header with flag, title, and chessboard
 # ----------------------------------------------------------------------
 col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
@@ -541,24 +730,26 @@ with col3:
 
 st.divider()
 
+# ----------------------------------------------------------------------
+# Login check – if not logged in, show password input and description
+# ----------------------------------------------------------------------
 if not check_password():
     st.info("👋 Welcome to the chess teaching app! Enter the password to start.")
     st.stop()
 
 # ----------------------------------------------------------------------
-# Game interface with responsive board
+# Game interface
 # ----------------------------------------------------------------------
 st.markdown(f"## {t['move_heading']}")
 st.markdown(t['move_instruction'])
 
-# Use a responsive width: 100% up to 500px, then fixed 500px
-board_size = 500
-if st.session_state.get("mobile", False):
-    board_size = 300  # not used; we'll use CSS
-board_svg = chess.svg.board(board=st.session_state.board, size=board_size)
-st.image(board_svg, width=board_size, use_column_width="auto")
+# Display chessboard as SVG
+board = st.session_state.board
+board_svg = chess.svg.board(board=board, size=400)
+st.image(board_svg, width=400)
 
 if st.session_state.game_over:
+    # Victory celebration (only if user won and not yet triggered)
     if st.session_state.winner == "user" and not st.session_state.celebration_triggered:
         st.session_state.celebration_triggered = True
         balloon_html = f"""
@@ -587,7 +778,7 @@ if st.session_state.game_over:
         st.components.v1.html(balloon_html, height=0)
     st.stop()
 
-# User move (unchanged)
+# User move
 if st.session_state.user_turn:
     squares = [chess.square_name(i) for i in range(64)]
     with st.form("move_form"):
@@ -600,23 +791,23 @@ if st.session_state.user_turn:
                 st.error(t['invalid_move_format'])
             else:
                 move = chess.Move.from_uci(from_sq + to_sq)
-                piece = st.session_state.board.piece_at(move.from_square)
+                piece = board.piece_at(move.from_square)
                 if piece is None:
                     st.error(t['invalid_move_no_piece'])
                 elif piece.color != chess.WHITE:
                     st.error(t['invalid_move_wrong_piece'])
-                elif move not in st.session_state.board.legal_moves:
+                elif move not in board.legal_moves:
                     st.error(t['invalid_move_illegal'])
                 else:
-                    explanation = explain_move(st.session_state.board, move, "You", lang)
-                    st.session_state.board.push(move)
+                    explanation = explain_move(board, move, "You", lang)
+                    board.push(move)
                     st.session_state.last_user_move = move
                     st.session_state.last_user_explanation = explanation
                     st.session_state.move_history.append(("user", move, explanation))
-                    if st.session_state.board.is_checkmate():
+                    if board.is_checkmate():
                         st.session_state.game_over = True
                         st.session_state.winner = "user"
-                    elif st.session_state.board.is_stalemate() or st.session_state.board.is_insufficient_material():
+                    elif board.is_stalemate() or board.is_insufficient_material():
                         st.session_state.game_over = True
                         st.session_state.winner = None
                     else:
@@ -627,17 +818,17 @@ if st.session_state.user_turn:
 else:
     with st.spinner(t['ai_thinking']):
         time.sleep(0.5)
-        move = ai_move(st.session_state.board, st.session_state.difficulty)
+        move = ai_move(board, st.session_state.difficulty)
         if move:
-            explanation = explain_move(st.session_state.board, move, "AI", lang)
-            st.session_state.board.push(move)
+            explanation = explain_move(board, move, "AI", lang)
+            board.push(move)
             st.session_state.last_ai_move = move
             st.session_state.last_ai_explanation = explanation
             st.session_state.move_history.append(("ai", move, explanation))
-            if st.session_state.board.is_checkmate():
+            if board.is_checkmate():
                 st.session_state.game_over = True
                 st.session_state.winner = "ai"
-            elif st.session_state.board.is_stalemate() or st.session_state.board.is_insufficient_material():
+            elif board.is_stalemate() or board.is_insufficient_material():
                 st.session_state.game_over = True
                 st.session_state.winner = None
             else:
@@ -647,5 +838,8 @@ else:
             st.session_state.winner = None
     st.rerun()
 
+# ----------------------------------------------------------------------
+# Footer
+# ----------------------------------------------------------------------
 st.divider()
 st.markdown(f"<div class='footer'>Made with ♟️ by GlobalInternet.py – {t['made_in_haiti']}</div>", unsafe_allow_html=True)
