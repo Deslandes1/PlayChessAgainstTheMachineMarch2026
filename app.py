@@ -137,7 +137,7 @@ def init_session_state():
 init_session_state()
 
 # ----------------------------------------------------------------------
-# Translations – full dictionary
+# Translations – full dictionary (with added piece_names_title)
 # ----------------------------------------------------------------------
 translations = {
     "en": {
@@ -154,6 +154,7 @@ translations = {
         "logout": "🚪 Logout",
         "download_report": "📥 Download Report",
         "move_dashboard": "📊 Move Dashboard",
+        "piece_names_title": "♟️ Piece Names",
         "your_last_move": "Your last move",
         "ai_last_move": "AI's last move",
         "no_move": "No move yet.",
@@ -218,6 +219,7 @@ translations = {
         "logout": "🚪 Déconnexion",
         "download_report": "📥 Télécharger le rapport",
         "move_dashboard": "📊 Tableau de bord",
+        "piece_names_title": "♟️ Noms des pièces",
         "your_last_move": "Votre dernier coup",
         "ai_last_move": "Dernier coup de l'IA",
         "no_move": "Pas encore de coup.",
@@ -282,6 +284,7 @@ translations = {
         "logout": "🚪 Cerrar sesión",
         "download_report": "📥 Descargar informe",
         "move_dashboard": "📊 Panel de movimientos",
+        "piece_names_title": "♟️ Nombres de las piezas",
         "your_last_move": "Tu último movimiento",
         "ai_last_move": "Último movimiento de la IA",
         "no_move": "Aún no hay movimientos.",
@@ -346,6 +349,7 @@ translations = {
         "logout": "🚪 Dekonekte",
         "download_report": "📥 Telechaje rapò",
         "move_dashboard": "📊 Tablodbò mouvman",
+        "piece_names_title": "♟️ Non pyès yo",
         "your_last_move": "Dènye mouvman ou",
         "ai_last_move": "Dènye mouvman AI",
         "no_move": "Pa gen mouvman ankò.",
@@ -573,7 +577,7 @@ lang = st.session_state.lang
 t = translations[lang]
 
 # ----------------------------------------------------------------------
-# Sidebar with branding, game controls, move dashboard, and logout
+# Sidebar with branding, game controls, move dashboard, piece names, etc.
 # ----------------------------------------------------------------------
 with st.sidebar:
     col_flag, col_name = st.columns([1, 3])
@@ -647,6 +651,18 @@ with st.sidebar:
     else:
         st.write(t['no_move'])
 
+    # ---------------------------
+    # NEW: Piece names section (translated)
+    # ---------------------------
+    st.divider()
+    st.markdown(f"## {t['piece_names_title']}")
+    piece_list = ["pawn", "knight", "bishop", "rook", "queen", "king"]
+    cols = st.columns(2)
+    for i, piece in enumerate(piece_list):
+        with cols[i % 2]:
+            st.markdown(f"♟️ **{t['piece_names'][piece]}**")
+    # ---------------------------
+
     st.divider()
     
     st.subheader(t['game_status'])
@@ -663,7 +679,6 @@ with st.sidebar:
     score = compute_score(st.session_state.board)
     st.divider()
     st.markdown(f"## {t['score']}")
-    # Fix empty label: add a hidden label with label_visibility="collapsed"
     st.metric(label="Score", value=score, delta=score if score != 0 else None, label_visibility="collapsed")
     
     st.divider()
