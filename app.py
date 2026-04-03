@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------------------------
-# Custom CSS
+# Custom CSS (unchanged)
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -111,7 +111,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------------------------
-# Initialize session state (all keys at once)
+# Initialize session state
 # ----------------------------------------------------------------------
 def init_session_state():
     defaults = {
@@ -137,7 +137,7 @@ def init_session_state():
 init_session_state()
 
 # ----------------------------------------------------------------------
-# Translations – full dictionary (with added piece_names_title)
+# Translations (full dictionary, same as before)
 # ----------------------------------------------------------------------
 translations = {
     "en": {
@@ -403,10 +403,9 @@ translations = {
 }
 
 # ----------------------------------------------------------------------
-# Helper functions (unchanged)
+# Helper functions (unchanged from previous version)
 # ----------------------------------------------------------------------
 def check_password():
-    """Returns True if password is correct."""
     def password_entered():
         if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
@@ -425,7 +424,6 @@ def check_password():
         return True
 
 def logout():
-    """Log out by resetting the password flag and clearing game state."""
     st.session_state["password_correct"] = False
     keys_to_clear = ["board", "move_history", "game_over", "winner", "difficulty",
                      "last_user_move", "last_ai_move", "last_user_explanation",
@@ -577,7 +575,7 @@ lang = st.session_state.lang
 t = translations[lang]
 
 # ----------------------------------------------------------------------
-# Sidebar with branding, game controls, move dashboard, piece names, etc.
+# Sidebar with all sections (including corrected piece names)
 # ----------------------------------------------------------------------
 with st.sidebar:
     col_flag, col_name = st.columns([1, 3])
@@ -652,15 +650,23 @@ with st.sidebar:
         st.write(t['no_move'])
 
     # ---------------------------
-    # NEW: Piece names section (translated)
+    # PIECE NAMES SECTION WITH DISTINCT SYMBOLS
     # ---------------------------
     st.divider()
     st.markdown(f"## {t['piece_names_title']}")
+    piece_symbols = {
+        "pawn": "♙",
+        "knight": "♘",
+        "bishop": "♗",
+        "rook": "♖",
+        "queen": "♕",
+        "king": "♔"
+    }
     piece_list = ["pawn", "knight", "bishop", "rook", "queen", "king"]
     cols = st.columns(2)
     for i, piece in enumerate(piece_list):
         with cols[i % 2]:
-            st.markdown(f"♟️ **{t['piece_names'][piece]}**")
+            st.markdown(f"{piece_symbols[piece]} **{t['piece_names'][piece]}**")
     # ---------------------------
 
     st.divider()
@@ -758,13 +764,11 @@ if not check_password():
 st.markdown(f"## {t['move_heading']}")
 st.markdown(t['move_instruction'])
 
-# Display chessboard as SVG
 board = st.session_state.board
 board_svg = chess.svg.board(board=board, size=400)
 st.image(board_svg, width=400)
 
 if st.session_state.game_over:
-    # Victory celebration (only if user won and not yet triggered)
     if st.session_state.winner == "user" and not st.session_state.celebration_triggered:
         st.session_state.celebration_triggered = True
         balloon_html = f"""
@@ -793,7 +797,6 @@ if st.session_state.game_over:
         st.components.v1.html(balloon_html, height=0)
     st.stop()
 
-# User move
 if st.session_state.user_turn:
     squares = [chess.square_name(i) for i in range(64)]
     with st.form("move_form"):
@@ -853,8 +856,5 @@ else:
             st.session_state.winner = None
     st.rerun()
 
-# ----------------------------------------------------------------------
-# Footer
-# ----------------------------------------------------------------------
 st.divider()
 st.markdown(f"<div class='footer'>Made with ♟️ by GlobalInternet.py – {t['made_in_haiti']}</div>", unsafe_allow_html=True)
