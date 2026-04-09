@@ -3,6 +3,7 @@ Chess Teaching App – Play against AI, learn the best move, save game history.
 Features:
 - Difficulty levels (Beginner, Intermediate, Advanced)
 - Move notation explained (N = Knight, B = Bishop, etc.)
+- Piece reference legend with symbols
 - Three winning strategies for each level
 - Login with Haitian flag (same as GlobalInternet.py website)
 - Download move history
@@ -56,7 +57,7 @@ with col_title:
     st.markdown("*Learn the best move from Stockfish, then play against it*")
 
 # ------------------------------
-# SIDEBAR – INFO & LOGOUT
+# SIDEBAR – INFO & LOGOUT & PIECE LEGEND
 # ------------------------------
 with st.sidebar:
     st.markdown("## 🇭🇹 GlobalInternet.py")
@@ -71,6 +72,22 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 💰 Price")
     st.markdown("**$149 USD** (lifetime license)")
+    st.markdown("---")
+    
+    # 🧩 Piece Reference Legend
+    st.markdown("### ♟️ Piece Reference")
+    st.markdown("""
+    | Piece | Symbol | Letter |
+    |-------|--------|--------|
+    | King | ♔ | K |
+    | Queen | ♕ | Q |
+    | Rook | ♖ | R |
+    | Bishop | ♗ | B |
+    | Knight | ♘ | N |
+    | Pawn | ♙ | (no letter) |
+    """)
+    st.caption("In notation, 'N' stands for Knight (because 'K' is King).")
+    
     st.markdown("---")
     st.markdown("### © 2025 GlobalInternet.py")
     st.markdown("All Rights Reserved")
@@ -260,7 +277,6 @@ with col_controls:
             move_options = {}
             for move in legal_moves:
                 san = get_move_san(move)
-                # Show piece name for clarity (e.g., "Nf3 (Knight to f3)")
                 move_options[san] = move
             selected_san = st.selectbox("Choose a move:", list(move_options.keys()))
             if st.button("▶️ Make Move", use_container_width=True):
