@@ -1,6 +1,7 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
 Multi‑language: English, Spanish, French, Haitian Creole.
+FIXED: AssertionError when making a move – SAN is now computed before board push.
 """
 
 import streamlit as st
@@ -15,7 +16,6 @@ import time
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-# Haitian flag from your website
 def show_haitian_flag(width=100):
     st.image("https://flagcdn.com/w320/ht.png", width=width)
 
@@ -446,9 +446,9 @@ if not st.session_state.authenticated:
     st.stop()
 
 # ------------------------------
-# MAIN APP (after login)
+# AFTER LOGIN – MAIN APP
 # ------------------------------
-# Language selector in sidebar (after login)
+# Language selector in sidebar
 lang = st.sidebar.selectbox(
     "🌐 Language / Langue / Idioma / Lang",
     options=list(LANGUAGES.keys()),
@@ -543,12 +543,10 @@ def get_best_move():
         pass
     return None
 
-def get_move_san(move):
-    return st.session_state.board.san(move)
-
-def update_move_history(move):
-    san = get_move_san(move)
-    st.session_state.move_history.append(san)
+def set_difficulty(level):
+    skill_map = {"Beginner": 1, "Intermediate": 10, "Advanced": 18}
+    st.session_state.stockfish.set_skill_level(skill_map[level])
+    st.session_state.difficulty = level
 
 def save_game_history():
     if not st.session_state.move_history:
@@ -562,11 +560,6 @@ def save_game_history():
     if len(st.session_state.move_history) % 2 == 1:
         history_str += "..."
     return history_str
-
-def set_difficulty(level):
-    skill_map = {"Beginner": 1, "Intermediate": 10, "Advanced": 18}
-    st.session_state.stockfish.set_skill_level(skill_map[level])
-    st.session_state.difficulty = level
 
 # ------------------------------
 # MOVE NOTATION EXPANDER
@@ -583,7 +576,6 @@ difficulty = st.radio(
     index=[t['beginner'], t['intermediate'], t['advanced']].index(t[st.session_state.difficulty.lower()]),
     horizontal=True
 )
-# Map display name back to internal key
 diff_map = {t['beginner']: "Beginner", t['intermediate']: "Intermediate", t['advanced']: "Advanced"}
 selected_diff = diff_map[difficulty]
 if selected_diff != st.session_state.difficulty:
@@ -623,7 +615,7 @@ with col_controls:
     if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE:
         best_move = get_best_move()
         if best_move:
-            best_san = get_move_san(best_move)
+            best_san = st.session_state.board.san(best_move)
             st.info(t['best_move_suggestion'].format(best_san))
             st.caption("This is the strongest move according to Stockfish. You can choose it or any other legal move.")
         else:
@@ -638,13 +630,15 @@ with col_controls:
         if legal_moves:
             move_options = {}
             for move in legal_moves:
-                san = get_move_san(move)
+                san = st.session_state.board.san(move)
                 move_options[san] = move
             selected_san = st.selectbox(t['choose_move'], list(move_options.keys()))
             if st.button(t['make_move_btn'], use_container_width=True):
                 move = move_options[selected_san]
+                # CRITICAL FIX: get SAN before pushing the move
+                move_san = st.session_state.board.san(move)
                 st.session_state.board.push(move)
-                update_move_history(move)
+                st.session_state.move_history.append(move_san)
                 st.session_state.last_move = move
                 st.rerun()
         else:
@@ -701,8 +695,10 @@ if not st.session_state.game_over and st.session_state.board.turn == chess.BLACK
             if best_move_uci:
                 move = chess.Move.from_uci(best_move_uci)
                 if move in st.session_state.board.legal_moves:
+                    # Get SAN before pushing AI move
+                    move_san = st.session_state.board.san(move)
                     st.session_state.board.push(move)
-                    update_move_history(move)
+                    st.session_state.move_history.append(move_san)
                     st.session_state.last_move = move
         except Exception as e:
             st.error(f"AI error: {e}")
