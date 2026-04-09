@@ -1,7 +1,7 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
 Features:
-- Password login with Haitian flag (20082010)
+- Password login with proper Haitian flag (blue/red with coat of arms)
 - AI teaches the best move for the current position
 - User chooses any legal move from a list
 - AI plays as Black with strong moves
@@ -23,23 +23,38 @@ from PIL import Image
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-def show_haitian_flag():
+def show_haitian_flag(size="medium"):
+    """
+    Display the proper Haitian flag (blue top, coat of arms center, red bottom).
+    Uses an image file if exists, otherwise a custom HTML/CSS with coat of arms symbol.
+    """
     flag_path = "haiti_flag.png"
     if os.path.exists(flag_path):
-        flag_img = Image.open(flag_path)
-        st.image(flag_img, width=150)
+        try:
+            img = Image.open(flag_path)
+            st.image(img, width=150 if size == "medium" else 80)
+            return
+        except:
+            pass
+    # Fallback: custom CSS square with blue/red and coat of arms symbol
+    if size == "small":
+        width = 80
+        height = 80
+        font_size = 40
     else:
-        st.markdown(
-            """
-            <div style="display: flex; align-items: center;">
-                <div style="background-color: #00209F; width: 60px; height: 40px;"></div>
-                <div style="background-color: #DE2119; width: 60px; height: 40px;"></div>
-                <span style="font-size: 30px; margin-left: 10px;">🇭🇹</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.caption("Haitian Flag (blue & red with coat of arms)")
+        width = 150
+        height = 150
+        font_size = 70
+    st.markdown(f"""
+    <div style="width: {width}px; height: {height}px; position: relative; margin: 0 auto;">
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 50%; background-color: #00209F;"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background-color: #DE2119;"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 60%; height: 60%; border-radius: 10%; display: flex; align-items: center; justify-content: center; font-size: {font_size}px; box-shadow: 0 0 0 2px gold;">
+            🌿🏔️🎖️
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.caption("Haitian Flag (Blue, Coat of Arms, Red)")
 
 # Authentication
 if "authenticated" not in st.session_state:
@@ -49,7 +64,7 @@ if not st.session_state.authenticated:
     st.title("🔐 Login Required")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        show_haitian_flag()
+        show_haitian_flag(size="medium")
         st.markdown("<h2 style='text-align: center;'>Chess Teaching AI</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>by GlobalInternet.py</p>", unsafe_allow_html=True)
         password_input = st.text_input("Enter password to play", type="password")
@@ -64,10 +79,10 @@ if not st.session_state.authenticated:
 # ------------------------------
 # AFTER LOGIN – MAIN APP
 # ------------------------------
-# Show flag again
+# Show flag again (small in sidebar, medium in main area)
 col_flag, col_title = st.columns([1, 3])
 with col_flag:
-    show_haitian_flag()
+    show_haitian_flag(size="medium")
 with col_title:
     st.markdown("<h1>♟️ Chess Teaching AI</h1>", unsafe_allow_html=True)
     st.markdown("*Learn the best move from Stockfish, then play against it*")
@@ -77,6 +92,7 @@ with col_title:
 # ------------------------------
 with st.sidebar:
     st.markdown("## 🇭🇹 GlobalInternet.py")
+    show_haitian_flag(size="small")  # small flag in sidebar
     st.markdown("### Smart Chess Tutor")
     st.markdown("---")
     st.markdown("**Founder & Developer:**")
