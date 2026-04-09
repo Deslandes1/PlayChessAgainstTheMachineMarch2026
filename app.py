@@ -1,269 +1,310 @@
 """
-Streamlit Chess App with AI Opponent
+Chess Teaching App – Play against AI, learn the best move, save game history.
 Features:
-- Play against Stockfish AI
-- Adjustable AI difficulty (1-20)
-- Legal move highlighting
-- Move history with algebraic notation
-- Game state tracking (check, checkmate, stalemate)
-- Reset button to start a new game
+- Password login with Haitian flag (20082010)
+- AI teaches the best move for the current position
+- User chooses any legal move from a list
+- AI plays as Black with strong moves
+- Download full move history at any time
+- Logout button
+- Company info, WhatsApp, website in sidebar
 """
 
 import streamlit as st
 import chess
 import chess.svg
-import random
 from stockfish import Stockfish
-import time
 import os
+import time
+from PIL import Image
 
-# Page config
-st.set_page_config(page_title="Chess Master AI", layout="wide")
+# ------------------------------
+# PAGE CONFIG & LOGIN
+# ------------------------------
+st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-# Custom CSS for better UI
-st.markdown("""
-<style>
-    .stButton button {
-        width: 100%;
-        background-color: #4CAF50;
-        color: white;
-        font-size: 18px;
-        padding: 10px;
-    }
-    .chess-board {
-        display: flex;
-        justify-content: center;
-        margin: 20px 0;
-    }
-    .info-box {
-        background-color: #f0f2f6;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 10px 0;
-    }
-</style>
-""", unsafe_allow_html=True)
+def show_haitian_flag():
+    flag_path = "haiti_flag.png"
+    if os.path.exists(flag_path):
+        flag_img = Image.open(flag_path)
+        st.image(flag_img, width=150)
+    else:
+        st.markdown(
+            """
+            <div style="display: flex; align-items: center;">
+                <div style="background-color: #00209F; width: 60px; height: 40px;"></div>
+                <div style="background-color: #DE2119; width: 60px; height: 40px;"></div>
+                <span style="font-size: 30px; margin-left: 10px;">🇭🇹</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.caption("Haitian Flag (blue & red with coat of arms)")
 
-# Initialize session state
+# Authentication
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.title("🔐 Login Required")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        show_haitian_flag()
+        st.markdown("<h2 style='text-align: center;'>Chess Teaching AI</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;'>by GlobalInternet.py</p>", unsafe_allow_html=True)
+        password_input = st.text_input("Enter password to play", type="password")
+        if st.button("Login"):
+            if password_input == "20082010":
+                st.session_state.authenticated = True
+                st.rerun()
+            else:
+                st.error("Incorrect password. Access denied.")
+    st.stop()
+
+# ------------------------------
+# AFTER LOGIN – MAIN APP
+# ------------------------------
+# Show flag again
+col_flag, col_title = st.columns([1, 3])
+with col_flag:
+    show_haitian_flag()
+with col_title:
+    st.markdown("<h1>♟️ Chess Teaching AI</h1>", unsafe_allow_html=True)
+    st.markdown("*Learn the best move from Stockfish, then play against it*")
+
+# ------------------------------
+# SIDEBAR – INFO & LOGOUT
+# ------------------------------
+with st.sidebar:
+    st.markdown("## 🇭🇹 GlobalInternet.py")
+    st.markdown("### Smart Chess Tutor")
+    st.markdown("---")
+    st.markdown("**Founder & Developer:**")
+    st.markdown("Gesner Deslandes")
+    st.markdown("📞 **WhatsApp:** [509 4738-5663](https://wa.me/50947385663)")
+    st.markdown("📧 **Email:** deslandes78@gmail.com")
+    st.markdown("🌐 **Website:** [www.globalinternet.py](https://www.globalinternet.py)")
+    st.markdown("---")
+    st.markdown("### 💰 Price")
+    st.markdown("**$149 USD** (lifetime license)")
+    st.markdown("---")
+    st.markdown("### © 2025 GlobalInternet.py")
+    st.markdown("All Rights Reserved")
+    st.markdown("---")
+    if st.button("🚪 Logout", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+# ------------------------------
+# INITIALIZE GAME STATE
+# ------------------------------
 if "board" not in st.session_state:
     st.session_state.board = chess.Board()
 if "stockfish" not in st.session_state:
-    # Try to find Stockfish in common locations
+    # Find Stockfish (works on Streamlit Cloud with packages.txt)
     stockfish_paths = [
-        "stockfish",
-        "stockfish.exe",
-        "/usr/games/stockfish",
-        "/usr/local/bin/stockfish",
-        "C:/stockfish/stockfish.exe",
-        "C:/Program Files/stockfish/stockfish.exe",
+        "stockfish", "stockfish.exe",
+        "/usr/games/stockfish", "/usr/local/bin/stockfish",
         "/mount/src/chess-app/stockfish/stockfish",
-        "/mount/src/chess-app/stockfish/stockfish.exe"
     ]
-    stockfish_path = None
-    for path in stockfish_paths:
-        if os.path.exists(path):
-            stockfish_path = path
+    sf_path = None
+    for p in stockfish_paths:
+        if os.path.exists(p):
+            sf_path = p
             break
-    if stockfish_path is None:
-        # Use a default path - will try to install if not found
-        stockfish_path = "stockfish"
+    if sf_path is None:
+        sf_path = "stockfish"  # hope it's in PATH
     try:
-        st.session_state.stockfish = Stockfish(stockfish_path)
-        st.session_state.stockfish.set_skill_level(10)
+        st.session_state.stockfish = Stockfish(sf_path)
+        st.session_state.stockfish.set_skill_level(15)  # strong but teachable
     except Exception as e:
-        st.error(f"⚠️ Stockfish not found. Please install it with:\n\nsudo apt-get install stockfish\n\nOr download from https://stockfishchess.org/download/")
+        st.error(f"Stockfish not found. Please ensure packages.txt includes 'stockfish'. Error: {e}")
         st.stop()
 if "game_over" not in st.session_state:
     st.session_state.game_over = False
 if "last_move" not in st.session_state:
     st.session_state.last_move = None
-if "selected_square" not in st.session_state:
-    st.session_state.selected_square = None
+if "move_history" not in st.session_state:
+    st.session_state.move_history = []  # store moves in algebraic notation
 if "ai_thinking" not in st.session_state:
     st.session_state.ai_thinking = False
+if "best_move_suggestion" not in st.session_state:
+    st.session_state.best_move_suggestion = None
 
-# Title
-st.title("♟️ Chess Master AI")
-st.markdown("### Play against a powerful chess engine!")
+# Update Stockfish FEN
+st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
 
-# Sidebar controls
-with st.sidebar:
-    st.header("⚙️ Settings")
-    
-    # Difficulty slider
-    difficulty = st.slider("AI Difficulty Level", 1, 20, 10, 
-                          help="1 = Beginner, 20 = Grandmaster")
-    st.session_state.stockfish.set_skill_level(difficulty)
-    
-    st.markdown("---")
-    
-    # Game info
-    st.header("📊 Game Info")
-    
-    # Whose turn?
-    if not st.session_state.game_over:
-        if st.session_state.board.turn == chess.WHITE:
-            st.info("🟢 Your turn!")
+# ------------------------------
+# HELPER FUNCTIONS
+# ------------------------------
+def get_best_move():
+    """Get the best move from Stockfish for the current position."""
+    try:
+        best = st.session_state.stockfish.get_best_move()
+        if best:
+            return chess.Move.from_uci(best)
+    except:
+        pass
+    return None
+
+def get_move_san(move):
+    """Return algebraic notation of a move."""
+    return st.session_state.board.san(move)
+
+def update_move_history(move):
+    """Add a move to history and store SAN."""
+    san = get_move_san(move)
+    st.session_state.move_history.append(san)
+
+def save_game_history():
+    """Return the move history as a downloadable string."""
+    if not st.session_state.move_history:
+        return "No moves played yet."
+    history_str = "Game Moves:\n"
+    for i, move in enumerate(st.session_state.move_history):
+        if i % 2 == 0:
+            history_str += f"{i//2 + 1}. {move} "
         else:
-            st.warning("🔴 AI is thinking...")
+            history_str += f"{move}\n"
+    if len(st.session_state.move_history) % 2 == 1:
+        history_str += "..."
+    return history_str
+
+# ------------------------------
+# MAIN DISPLAY
+# ------------------------------
+col_board, col_controls = st.columns([2, 1])
+
+with col_board:
+    # Show chessboard
+    highlight_squares = []
+    if st.session_state.last_move:
+        highlight_squares.append(st.session_state.last_move.from_square)
+        highlight_squares.append(st.session_state.last_move.to_square)
+    board_svg = chess.svg.board(
+        st.session_state.board,
+        size=500,
+        lastmove=st.session_state.last_move,
+        check=st.session_state.board.king(st.session_state.board.turn) if st.session_state.board.is_check() else None,
+        squares=highlight_squares
+    )
+    st.components.v1.html(board_svg, height=550, width=550)
+
+with col_controls:
+    st.markdown("### 🎓 AI Teaching")
+    if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE:
+        # Show best move suggestion for the user
+        best_move = get_best_move()
+        if best_move:
+            best_san = get_move_san(best_move)
+            st.info(f"💡 **Best move suggestion:** {best_san}")
+            st.caption("This is the strongest move according to Stockfish. You can choose it or any other legal move.")
+        else:
+            st.warning("No best move found.")
     else:
-        st.error("🏁 Game Over!")
-    
-    # Move history
-    st.header("📜 Move History")
-    move_history = list(st.session_state.board.move_stack)
-    if move_history:
-        history_text = ""
-        for i, move in enumerate(move_history):
-            if i % 2 == 0:
-                history_text += f"{i//2 + 1}. {move} "
-            else:
-                history_text += f"{move}\n"
-        if len(move_history) % 2 == 1:
-            history_text += "..."
-        st.text_area("Moves", history_text, height=200, label_visibility="collapsed")
+        st.info("AI is thinking... (Black's turn)")
+
+    st.markdown("---")
+    st.markdown("### 🎯 Your Move")
+    if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE and not st.session_state.ai_thinking:
+        legal_moves = list(st.session_state.board.legal_moves)
+        if legal_moves:
+            # Build move options with SAN and UCI
+            move_options = {}
+            for move in legal_moves:
+                san = get_move_san(move)
+                move_options[san] = move
+            selected_san = st.selectbox("Choose a move:", list(move_options.keys()))
+            if st.button("▶️ Make Move", use_container_width=True):
+                move = move_options[selected_san]
+                st.session_state.board.push(move)
+                update_move_history(move)
+                st.session_state.last_move = move
+                st.rerun()
+        else:
+            st.error("No legal moves! Game over.")
+            st.session_state.game_over = True
+    elif st.session_state.game_over:
+        st.info("Game finished. Start a new game below.")
     else:
-        st.caption("No moves yet")
-    
-    # Reset button
+        st.info("AI is thinking... Please wait.")
+
+    # Download game history
+    st.markdown("---")
+    st.markdown("### 📥 Save Game")
+    history_text = save_game_history()
+    st.download_button(
+        label="Download Move History",
+        data=history_text,
+        file_name=f"chess_game_{time.strftime('%Y%m%d_%H%M%S')}.txt",
+        mime="text/plain",
+        use_container_width=True
+    )
+
+    # New game button
+    st.markdown("---")
     if st.button("🔄 New Game", use_container_width=True):
         st.session_state.board = chess.Board()
         st.session_state.game_over = False
         st.session_state.last_move = None
-        st.session_state.selected_square = None
+        st.session_state.move_history = []
+        st.session_state.best_move_suggestion = None
         st.rerun()
 
-# Main board display
-col1, col2 = st.columns([2, 1])
-
-with col1:
-    st.markdown('<div class="chess-board">', unsafe_allow_html=True)
-    
-    # Get board SVG
-    try:
-        # Prepare squares for highlighting
-        highlight_squares = []
-        if st.session_state.selected_square is not None:
-            highlight_squares.append(st.session_state.selected_square)
-            # Highlight legal moves from selected square
-            for move in st.session_state.board.legal_moves:
-                if move.from_square == st.session_state.selected_square:
-                    highlight_squares.append(move.to_square)
-        
-        # Generate board SVG
-        board_svg = chess.svg.board(
-            st.session_state.board,
-            size=500,
-            squares=highlight_squares,
-            lastmove=st.session_state.last_move,
-            check=st.session_state.board.king(st.session_state.board.turn) if st.session_state.board.is_check() else None
-        )
-        st.components.v1.html(board_svg, height=550, width=550)
-    except Exception as e:
-        st.error(f"Error displaying board: {e}")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col2:
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
-    
-    # Game status
-    if not st.session_state.game_over:
-        if st.session_state.board.is_check():
-            if st.session_state.board.turn == chess.WHITE:
-                st.error("⚠️ CHECK! Your king is in danger!")
-            else:
-                st.error("⚠️ CHECK! AI's king is in danger!")
-        elif st.session_state.board.is_checkmate():
-            st.session_state.game_over = True
-            if st.session_state.board.turn == chess.WHITE:
-                st.success("🏆 Checkmate! AI wins! 🏆")
-            else:
-                st.success("🏆 Checkmate! You win! 🏆")
-        elif st.session_state.board.is_stalemate():
-            st.session_state.game_over = True
-            st.info("♟️ Stalemate! Game drawn.")
-        elif st.session_state.board.is_insufficient_material():
-            st.session_state.game_over = True
-            st.info("♟️ Insufficient material for checkmate. Game drawn.")
-        else:
-            if st.session_state.board.turn == chess.WHITE:
-                st.info("👑 Your move")
-            else:
-                st.info("🤖 AI is thinking...")
-    else:
-        if st.session_state.board.is_checkmate():
-            if st.session_state.board.turn == chess.WHITE:
-                st.success("🏆 Checkmate! AI wins! 🏆")
-            else:
-                st.success("🏆 Checkmate! You win! 🏆")
-        else:
-            st.info("♟️ Game Over")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Handle player move via click coordinates (using a simpler approach)
-# Since chess.svg doesn't directly give click events, we'll use selectbox for moves
-if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE and not st.session_state.ai_thinking:
-    st.markdown("### 🎯 Make your move")
-    
-    # Get legal moves for display
-    legal_moves = list(st.session_state.board.legal_moves)
-    if legal_moves:
-        # Create a dictionary mapping move strings to move objects
-        move_options = {}
-        for move in legal_moves:
-            move_str = f"{chess.square_name(move.from_square)} → {chess.square_name(move.to_square)}"
-            if move.promotion:
-                move_str += f" (promote to {chess.PIECE_SYMBOLS[move.promotion].upper()})"
-            move_options[move_str] = move
-        
-        # Select move from dropdown
-        selected_move_str = st.selectbox("Choose your move:", list(move_options.keys()))
-        
-        # Make move button
-        if st.button("▶️ Make Move", use_container_width=True):
-            move = move_options[selected_move_str]
-            st.session_state.board.push(move)
-            st.session_state.last_move = move
-            st.session_state.selected_square = None
-            st.rerun()
-    else:
-        st.error("No legal moves available!")
+# ------------------------------
+# GAME STATUS & AI MOVE
+# ------------------------------
+# Check game over conditions
+if not st.session_state.game_over:
+    if st.session_state.board.is_checkmate():
         st.session_state.game_over = True
+        if st.session_state.board.turn == chess.WHITE:
+            st.success("🏆 Checkmate! Black (AI) wins.")
+        else:
+            st.success("🏆 Checkmate! White (You) wins!")
+    elif st.session_state.board.is_stalemate():
+        st.session_state.game_over = True
+        st.info("♟️ Stalemate! Game drawn.")
+    elif st.session_state.board.is_insufficient_material():
+        st.session_state.game_over = True
+        st.info("♟️ Insufficient material – drawn.")
 
-# AI Move
+# AI move (Black)
 if not st.session_state.game_over and st.session_state.board.turn == chess.BLACK and not st.session_state.ai_thinking:
     st.session_state.ai_thinking = True
-    with st.spinner("🤖 AI is analyzing the position..."):
-        time.sleep(0.5)  # Give the UI time to update
+    with st.spinner("🤖 AI is calculating the best move..."):
+        time.sleep(0.3)  # slight delay for UI
         try:
-            # Get best move from Stockfish
             st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
-            best_move = st.session_state.stockfish.get_best_move()
-            if best_move:
-                move = chess.Move.from_uci(best_move)
+            best_move_uci = st.session_state.stockfish.get_best_move()
+            if best_move_uci:
+                move = chess.Move.from_uci(best_move_uci)
                 if move in st.session_state.board.legal_moves:
                     st.session_state.board.push(move)
+                    update_move_history(move)
                     st.session_state.last_move = move
         except Exception as e:
             st.error(f"AI error: {e}")
     st.session_state.ai_thinking = False
     st.rerun()
 
-# Game over message
-if st.session_state.game_over:
+# Show game status messages
+if not st.session_state.game_over:
+    if st.session_state.board.is_check():
+        if st.session_state.board.turn == chess.WHITE:
+            st.warning("⚠️ Your king is in CHECK! Defend it.")
+        else:
+            st.warning("⚠️ AI's king is in CHECK!")
+    else:
+        if st.session_state.board.turn == chess.WHITE:
+            st.info("Your turn – choose a move from the dropdown.")
+        else:
+            st.info("AI is thinking – it will move shortly.")
+else:
     st.balloons()
-    st.markdown("### 🎉 Game Over! Click 'New Game' to play again.")
+    st.markdown("### Game Over! Click 'New Game' to play again.")
 
 # Footer
 st.markdown("---")
-st.markdown("### ℹ️ How to Play")
-st.markdown("""
-1. **White moves first** - you control the white pieces
-2. **Select your move** from the dropdown menu
-3. **Click 'Make Move'** to execute your move
-4. **AI will automatically respond** with its move
-5. **Adjust difficulty** in the sidebar (1-20)
-6. **New Game** button starts a fresh match
-""")
+st.markdown("📘 **How to learn:** The AI shows the best move suggestion above. You can pick that move or any other legal move. After your move, the AI will play its best response. Download your move history anytime.")
