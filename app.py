@@ -1,6 +1,6 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
-Uses the same Haitian flag as your GlobalInternet.py website.
+Uses the EXACT Haitian flag code from GlobalInternet.py radio app.
 """
 
 import streamlit as st
@@ -16,7 +16,7 @@ from PIL import Image
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-# ========== HAITIAN FLAG – EXACTLY AS IN YOUR WEBSITE ==========
+# ========== HAITIAN FLAG – IDENTICAL TO YOUR GLOBALINTERNET.PY RADIO APP ==========
 def show_haitian_flag():
     flag_path = "haiti_flag.png"
     if os.path.exists(flag_path):
@@ -34,7 +34,7 @@ def show_haitian_flag():
             unsafe_allow_html=True
         )
         st.caption("Haitian Flag (blue & red with coat of arms)")
-# ================================================================
+# ================================================================================
 
 # Authentication
 if "authenticated" not in st.session_state:
