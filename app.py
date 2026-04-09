@@ -1,13 +1,6 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
-Features:
-- Password login with proper Haitian flag (blue/red with coat of arms)
-- AI teaches the best move for the current position
-- User chooses any legal move from a list
-- AI plays as Black with strong moves
-- Download full move history at any time
-- Logout button
-- Company info, WhatsApp, website in sidebar
+Uses the same Haitian flag as your GlobalInternet.py website.
 """
 
 import streamlit as st
@@ -23,38 +16,25 @@ from PIL import Image
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-def show_haitian_flag(size="medium"):
-    """
-    Display the proper Haitian flag (blue top, coat of arms center, red bottom).
-    Uses an image file if exists, otherwise a custom HTML/CSS with coat of arms symbol.
-    """
+# ========== HAITIAN FLAG – EXACTLY AS IN YOUR WEBSITE ==========
+def show_haitian_flag():
     flag_path = "haiti_flag.png"
     if os.path.exists(flag_path):
-        try:
-            img = Image.open(flag_path)
-            st.image(img, width=150 if size == "medium" else 80)
-            return
-        except:
-            pass
-    # Fallback: custom CSS square with blue/red and coat of arms symbol
-    if size == "small":
-        width = 80
-        height = 80
-        font_size = 40
+        flag_img = Image.open(flag_path)
+        st.image(flag_img, width=150)
     else:
-        width = 150
-        height = 150
-        font_size = 70
-    st.markdown(f"""
-    <div style="width: {width}px; height: {height}px; position: relative; margin: 0 auto;">
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 50%; background-color: #00209F;"></div>
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background-color: #DE2119;"></div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 60%; height: 60%; border-radius: 10%; display: flex; align-items: center; justify-content: center; font-size: {font_size}px; box-shadow: 0 0 0 2px gold;">
-            🌿🏔️🎖️
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.caption("Haitian Flag (Blue, Coat of Arms, Red)")
+        st.markdown(
+            """
+            <div style="display: flex; align-items: center;">
+                <div style="background-color: #00209F; width: 60px; height: 40px;"></div>
+                <div style="background-color: #DE2119; width: 60px; height: 40px;"></div>
+                <span style="font-size: 30px; margin-left: 10px;">🇭🇹</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.caption("Haitian Flag (blue & red with coat of arms)")
+# ================================================================
 
 # Authentication
 if "authenticated" not in st.session_state:
@@ -64,7 +44,7 @@ if not st.session_state.authenticated:
     st.title("🔐 Login Required")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        show_haitian_flag(size="medium")
+        show_haitian_flag()
         st.markdown("<h2 style='text-align: center;'>Chess Teaching AI</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>by GlobalInternet.py</p>", unsafe_allow_html=True)
         password_input = st.text_input("Enter password to play", type="password")
@@ -79,10 +59,9 @@ if not st.session_state.authenticated:
 # ------------------------------
 # AFTER LOGIN – MAIN APP
 # ------------------------------
-# Show flag again (small in sidebar, medium in main area)
 col_flag, col_title = st.columns([1, 3])
 with col_flag:
-    show_haitian_flag(size="medium")
+    show_haitian_flag()
 with col_title:
     st.markdown("<h1>♟️ Chess Teaching AI</h1>", unsafe_allow_html=True)
     st.markdown("*Learn the best move from Stockfish, then play against it*")
@@ -92,7 +71,7 @@ with col_title:
 # ------------------------------
 with st.sidebar:
     st.markdown("## 🇭🇹 GlobalInternet.py")
-    show_haitian_flag(size="small")  # small flag in sidebar
+    show_haitian_flag()
     st.markdown("### Smart Chess Tutor")
     st.markdown("---")
     st.markdown("**Founder & Developer:**")
@@ -118,7 +97,6 @@ with st.sidebar:
 if "board" not in st.session_state:
     st.session_state.board = chess.Board()
 if "stockfish" not in st.session_state:
-    # Find Stockfish (works on Streamlit Cloud with packages.txt)
     stockfish_paths = [
         "stockfish", "stockfish.exe",
         "/usr/games/stockfish", "/usr/local/bin/stockfish",
@@ -130,10 +108,10 @@ if "stockfish" not in st.session_state:
             sf_path = p
             break
     if sf_path is None:
-        sf_path = "stockfish"  # hope it's in PATH
+        sf_path = "stockfish"
     try:
         st.session_state.stockfish = Stockfish(sf_path)
-        st.session_state.stockfish.set_skill_level(15)  # strong but teachable
+        st.session_state.stockfish.set_skill_level(15)
     except Exception as e:
         st.error(f"Stockfish not found. Please ensure packages.txt includes 'stockfish'. Error: {e}")
         st.stop()
@@ -142,20 +120,16 @@ if "game_over" not in st.session_state:
 if "last_move" not in st.session_state:
     st.session_state.last_move = None
 if "move_history" not in st.session_state:
-    st.session_state.move_history = []  # store moves in algebraic notation
+    st.session_state.move_history = []
 if "ai_thinking" not in st.session_state:
     st.session_state.ai_thinking = False
-if "best_move_suggestion" not in st.session_state:
-    st.session_state.best_move_suggestion = None
 
-# Update Stockfish FEN
 st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
 
 # ------------------------------
 # HELPER FUNCTIONS
 # ------------------------------
 def get_best_move():
-    """Get the best move from Stockfish for the current position."""
     try:
         best = st.session_state.stockfish.get_best_move()
         if best:
@@ -165,16 +139,13 @@ def get_best_move():
     return None
 
 def get_move_san(move):
-    """Return algebraic notation of a move."""
     return st.session_state.board.san(move)
 
 def update_move_history(move):
-    """Add a move to history and store SAN."""
     san = get_move_san(move)
     st.session_state.move_history.append(san)
 
 def save_game_history():
-    """Return the move history as a downloadable string."""
     if not st.session_state.move_history:
         return "No moves played yet."
     history_str = "Game Moves:\n"
@@ -193,7 +164,6 @@ def save_game_history():
 col_board, col_controls = st.columns([2, 1])
 
 with col_board:
-    # Show chessboard
     highlight_squares = []
     if st.session_state.last_move:
         highlight_squares.append(st.session_state.last_move.from_square)
@@ -210,7 +180,6 @@ with col_board:
 with col_controls:
     st.markdown("### 🎓 AI Teaching")
     if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE:
-        # Show best move suggestion for the user
         best_move = get_best_move()
         if best_move:
             best_san = get_move_san(best_move)
@@ -226,7 +195,6 @@ with col_controls:
     if not st.session_state.game_over and st.session_state.board.turn == chess.WHITE and not st.session_state.ai_thinking:
         legal_moves = list(st.session_state.board.legal_moves)
         if legal_moves:
-            # Build move options with SAN and UCI
             move_options = {}
             for move in legal_moves:
                 san = get_move_san(move)
@@ -246,7 +214,6 @@ with col_controls:
     else:
         st.info("AI is thinking... Please wait.")
 
-    # Download game history
     st.markdown("---")
     st.markdown("### 📥 Save Game")
     history_text = save_game_history()
@@ -258,20 +225,17 @@ with col_controls:
         use_container_width=True
     )
 
-    # New game button
     st.markdown("---")
     if st.button("🔄 New Game", use_container_width=True):
         st.session_state.board = chess.Board()
         st.session_state.game_over = False
         st.session_state.last_move = None
         st.session_state.move_history = []
-        st.session_state.best_move_suggestion = None
         st.rerun()
 
 # ------------------------------
 # GAME STATUS & AI MOVE
 # ------------------------------
-# Check game over conditions
 if not st.session_state.game_over:
     if st.session_state.board.is_checkmate():
         st.session_state.game_over = True
@@ -286,11 +250,10 @@ if not st.session_state.game_over:
         st.session_state.game_over = True
         st.info("♟️ Insufficient material – drawn.")
 
-# AI move (Black)
 if not st.session_state.game_over and st.session_state.board.turn == chess.BLACK and not st.session_state.ai_thinking:
     st.session_state.ai_thinking = True
     with st.spinner("🤖 AI is calculating the best move..."):
-        time.sleep(0.3)  # slight delay for UI
+        time.sleep(0.3)
         try:
             st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
             best_move_uci = st.session_state.stockfish.get_best_move()
@@ -305,7 +268,6 @@ if not st.session_state.game_over and st.session_state.board.turn == chess.BLACK
     st.session_state.ai_thinking = False
     st.rerun()
 
-# Show game status messages
 if not st.session_state.game_over:
     if st.session_state.board.is_check():
         if st.session_state.board.turn == chess.WHITE:
@@ -321,6 +283,5 @@ else:
     st.balloons()
     st.markdown("### Game Over! Click 'New Game' to play again.")
 
-# Footer
 st.markdown("---")
 st.markdown("📘 **How to learn:** The AI shows the best move suggestion above. You can pick that move or any other legal move. After your move, the AI will play its best response. Download your move history anytime.")
