@@ -1,6 +1,6 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
-Uses the EXACT Haitian flag code from GlobalInternet.py radio app.
+Uses the EXACT Haitian flag from GlobalInternet.py website (flagcdn.com).
 """
 
 import streamlit as st
@@ -9,32 +9,16 @@ import chess.svg
 from stockfish import Stockfish
 import os
 import time
-from PIL import Image
 
 # ------------------------------
 # PAGE CONFIG & LOGIN
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-# ========== HAITIAN FLAG – IDENTICAL TO YOUR GLOBALINTERNET.PY RADIO APP ==========
-def show_haitian_flag():
-    flag_path = "haiti_flag.png"
-    if os.path.exists(flag_path):
-        flag_img = Image.open(flag_path)
-        st.image(flag_img, width=150)
-    else:
-        st.markdown(
-            """
-            <div style="display: flex; align-items: center;">
-                <div style="background-color: #00209F; width: 60px; height: 40px;"></div>
-                <div style="background-color: #DE2119; width: 60px; height: 40px;"></div>
-                <span style="font-size: 30px; margin-left: 10px;">🇭🇹</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.caption("Haitian Flag (blue & red with coat of arms)")
-# ================================================================================
+# ========== HAITIAN FLAG – EXACTLY AS ON YOUR WEBSITE ==========
+def show_haitian_flag(width=100):
+    st.image("https://flagcdn.com/w320/ht.png", width=width)
+# ================================================================
 
 # Authentication
 if "authenticated" not in st.session_state:
@@ -44,7 +28,7 @@ if not st.session_state.authenticated:
     st.title("🔐 Login Required")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        show_haitian_flag()
+        show_haitian_flag(150)
         st.markdown("<h2 style='text-align: center;'>Chess Teaching AI</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>by GlobalInternet.py</p>", unsafe_allow_html=True)
         password_input = st.text_input("Enter password to play", type="password")
@@ -61,7 +45,7 @@ if not st.session_state.authenticated:
 # ------------------------------
 col_flag, col_title = st.columns([1, 3])
 with col_flag:
-    show_haitian_flag()
+    show_haitian_flag(120)
 with col_title:
     st.markdown("<h1>♟️ Chess Teaching AI</h1>", unsafe_allow_html=True)
     st.markdown("*Learn the best move from Stockfish, then play against it*")
@@ -71,7 +55,7 @@ with col_title:
 # ------------------------------
 with st.sidebar:
     st.markdown("## 🇭🇹 GlobalInternet.py")
-    show_haitian_flag()
+    show_haitian_flag(80)
     st.markdown("### Smart Chess Tutor")
     st.markdown("---")
     st.markdown("**Founder & Developer:**")
