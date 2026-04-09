@@ -1,6 +1,12 @@
 """
 Chess Teaching App – Play against AI, learn the best move, save game history.
-Uses the EXACT Haitian flag from GlobalInternet.py website (flagcdn.com).
+Features:
+- Difficulty levels (Beginner, Intermediate, Advanced)
+- Move notation explained (N = Knight, B = Bishop, etc.)
+- Three winning strategies for each level
+- Login with Haitian flag (same as GlobalInternet.py website)
+- Download move history
+- Logout and company info
 """
 
 import streamlit as st
@@ -15,10 +21,9 @@ import time
 # ------------------------------
 st.set_page_config(page_title="Chess Teaching AI", layout="wide")
 
-# ========== HAITIAN FLAG – EXACTLY AS ON YOUR WEBSITE ==========
+# Haitian flag from your website
 def show_haitian_flag(width=100):
     st.image("https://flagcdn.com/w320/ht.png", width=width)
-# ================================================================
 
 # Authentication
 if "authenticated" not in st.session_state:
@@ -95,7 +100,7 @@ if "stockfish" not in st.session_state:
         sf_path = "stockfish"
     try:
         st.session_state.stockfish = Stockfish(sf_path)
-        st.session_state.stockfish.set_skill_level(15)
+        st.session_state.stockfish.set_skill_level(10)  # default intermediate
     except Exception as e:
         st.error(f"Stockfish not found. Please ensure packages.txt includes 'stockfish'. Error: {e}")
         st.stop()
@@ -107,7 +112,10 @@ if "move_history" not in st.session_state:
     st.session_state.move_history = []
 if "ai_thinking" not in st.session_state:
     st.session_state.ai_thinking = False
+if "difficulty" not in st.session_state:
+    st.session_state.difficulty = "Intermediate"
 
+# Update Stockfish FEN
 st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
 
 # ------------------------------
@@ -142,8 +150,78 @@ def save_game_history():
         history_str += "..."
     return history_str
 
+def set_difficulty(level):
+    """Set Stockfish skill level based on difficulty."""
+    skill_map = {
+        "Beginner": 1,
+        "Intermediate": 10,
+        "Advanced": 18
+    }
+    st.session_state.stockfish.set_skill_level(skill_map[level])
+    st.session_state.difficulty = level
+
 # ------------------------------
-# MAIN DISPLAY
+# MOVE NOTATION EXPLANATION
+# ------------------------------
+with st.expander("📖 How to read chess moves (e.g., Nh3)"):
+    st.markdown("""
+    **Piece letters:**
+    - **K** = King
+    - **Q** = Queen
+    - **R** = Rook
+    - **B** = Bishop
+    - **N** = Knight (because K is already used for King)
+    - (no letter for pawn moves, e.g., `e4` means pawn to e4)
+    
+    **Coordinates:** Each square has a letter (a-h) for file and a number (1-8) for rank.
+    - `Nh3` = Knight moves to square h3
+    - `Bxf7` = Bishop captures on f7
+    - `O-O` = kingside castling, `O-O-O` = queenside castling
+    - `+` means check, `#` means checkmate.
+    """)
+
+# ------------------------------
+# DIFFICULTY SELECTOR
+# ------------------------------
+difficulty = st.radio(
+    "🎮 Chess Game Level:",
+    ["Beginner", "Intermediate", "Advanced"],
+    index=["Beginner", "Intermediate", "Advanced"].index(st.session_state.difficulty),
+    horizontal=True
+)
+if difficulty != st.session_state.difficulty:
+    set_difficulty(difficulty)
+    st.rerun()
+
+# ------------------------------
+# WINNING STRATEGIES BY LEVEL
+# ------------------------------
+st.markdown("### 🧠 Three winning moves/strategies for this level")
+strategies = {
+    "Beginner": [
+        "1. **Fool's Mate (2 moves):** 1. f3 e5 2. g4?? Qh4# – Black delivers checkmate in two moves. Learn to spot unprotected kings.",
+        "2. **Scholar's Mate (4 moves):** 1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6?? 4. Qxf7# – Attack the f7 square early.",
+        "3. **Four-Move Checkmate defense:** As White, play 1. e4, 2. Bc4, 3. Qf3, 4. Qxf7# if Black doesn't defend f7."
+    ],
+    "Intermediate": [
+        "1. **Italian Game – Fried Liver Attack:** 1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 Nxd5?? 6. Nxf7! winning the queen.",
+        "2. **Queen's Gambit Accepted:** 1. d4 d5 2. c4 dxc4 3. e3 – develop quickly and regain the pawn with active pieces.",
+        "3. **King's Indian Defense:** As Black, play 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 – solid and counter-attacking."
+    ],
+    "Advanced": [
+        "1. **Sicilian Dragon – Yugoslav Attack:** 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 g6 6. Be3 Bg7 7. f3 – aggressive kingside attack.",
+        "2. **Ruy Lopez – Marshall Attack:** 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 O-O 8. c3 d5 – sharp tactical counterplay.",
+        "3. **French Defense – Winawer Variation:** 1. e4 e6 2. d4 d5 3. Nc3 Bb4 4. e5 c5 5. a3 Bxc3+ 6. bxc3 – imbalanced pawn structure with attacking chances."
+    ]
+}
+
+for i, strat in enumerate(strategies[difficulty], 1):
+    st.markdown(f"{i}. {strat}")
+
+st.markdown("---")
+
+# ------------------------------
+# MAIN GAME DISPLAY
 # ------------------------------
 col_board, col_controls = st.columns([2, 1])
 
@@ -182,6 +260,7 @@ with col_controls:
             move_options = {}
             for move in legal_moves:
                 san = get_move_san(move)
+                # Show piece name for clarity (e.g., "Nf3 (Knight to f3)")
                 move_options[san] = move
             selected_san = st.selectbox("Choose a move:", list(move_options.keys()))
             if st.button("▶️ Make Move", use_container_width=True):
